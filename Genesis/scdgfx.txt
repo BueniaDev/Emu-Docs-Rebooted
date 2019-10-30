@@ -1,0 +1,57 @@
+Sega CD Graphics Co-processor Notes
+by Michael Pavone (mask_of_destiny@hotmail.com)
+
+First Revision - 5/16/2003
+
+To Do:
+Add information from Eidolon's document
+Reverse engineer and add information about other modes
+Add examples
+
+
+-----------
+|Registers|
+-----------
+All registers are word-wide and are accessible by the Sub CPU.
+
+FF8058 - Mode?  All my tests involved a value of 7h.
+FF805A - Name table offset in WordRAM shifted right 2 bits. (note, only the top 3 bits are used)
+FF805C - Output height in cells
+FF805E - Offset in WordRAM to store output shifted right 2 bits.
+FF8060 - Unkown, Sonic CD intro sets this to 0
+FF8062 - Output Width in pixels
+FF8064 - Number of output lines to process (note, this does not effect the number of cells output by the chip)
+FF8066 - Offset in WordRAM of Line Definition Table shifted right 2 bits.
+
+----------
+|Patterns|
+----------
+These are garden variety Genesis paterns, except that they are grouped in 4x4 blocks.
+
+------------
+|Name Table|
+------------
+The name table defines how the patterns will be mapped onto a virtual 4096x4096 image.  Each entry is 2 bytes long and gives the offset into WordRAM of the 16 cell block to use.  The value is shifted 7 bits to the right.  The name table is 8000h bytes in size.
+
+-----------------------
+|Line Definition Table|
+-----------------------
+This table has an entry for every output line.  Each entry consists of the following
+
+0x0:	X Coordinate
+0x2:	Y Coordinate
+0x4:	X Component of the distance
+0x6:	Y Component of hte distance
+
+This information defines a line on the virtual 4096x4096 image.  Pixel data is taken from along this line to produce the output line.  The coordinate plane has a greater resolution than the virtual image defined by the name table.  8 units on the coordinate plane are equal to one pixel.
+
+--------
+|Output|
+--------
+The chip outputs patterns in the standard Genesis format; however, it goes down the column before it goes down the row.  Set up your name table on the Genesis VDP accordingly.
+
+
+Notes: Some or all of this data probably only applies to the mode I tested.  None of this information has been thoroughly tested and none of it has been tested on the real hardware (because I'm lazy and out of CD-Rs).
+
+I would like the thank the following people in no particular order, Eidolon, Steve Snake, Stephane Dallongeville, and all the contributors to Eidolon's Sega CD document.
+

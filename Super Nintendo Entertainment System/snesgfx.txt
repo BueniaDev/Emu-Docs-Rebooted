@@ -1,0 +1,672 @@
+
+--------=======SNES and GB sprite storage formats, ver 0.0=======--------
+                          By FDwR on 5-28-98
+
+For anybody who wants to have some fun editing the images in their games,
+exporting their favorite characters to separate pictures, or just learn
+about Nintendo graphics, this doc will explain how they are stored. It
+expects that you at least already know what bits, bytes, and pixels are.
+
+1. Tiles intro
+2. Bitplanes
+3. All known formats listed
+4. What viewers support them
+5. Problems finding sprites
+6. Thanks, credits, and sources
+
+
+1. -- Tiles Intro --------
+
+If you have already read through some other docs about how sprites are
+stored in the console itself, you will likely be a little familiar with
+this; however, this doc explains how they are stored in the ROM
+cartridge, not in the console's Video RAM during gameplay. Most of the
+time, sprites are stored exactly the same in ROM as they would be in VRAM
+for simplicity, but sometimes to save space, they can be arranged quite
+differently in various compressed formats. Theoretically, they could be
+stored in any way as long as they were eventually translated into the
+standard 1, 2 or 4 bit tiles the two PPU's (Picture Processing Units)
+understand. To view or edit these tiles in the ROM though, we need to
+know how they are arranged in their compressed formats too.
+
+For those that have not already read the documents by Yoshi or Dax about
+the sprite formats, here is a little intro. Unlike computer game images
+which are composed of hundreds of individual pixels, each one drawn by
+the software itself, console systems (including the NES, Sega, GameBoy, &
+SNES) build up all their scenes from larger blocks called tiles, which
+are all automatically handled by dedicated graphics chips. For the all
+the Nintendo consoles at least, each tile is always 8x8 pixels. Although
+the number of colors can be variable, the dimensions are always the same.
+Larger blocks like 16x16 are actually composed of smaller 8x8 tiles, four
+to be exact. 32x32 sprites would be made of sixteen tiles. Why does the
+SNES draw everything with these building blocks instead of little pixels?
+For one it's just simpler, and for another reason, it saves a lot of
+space. Instead of having two copies of the actual 256 pixels for two
+16x16 blocks on screen, you only need one copy of the tile and then two
+tile numbers to specify which ones to use. There are also of course some
+disadvantages, like not being able to plot single pixels with as great of
+ease, but apparently the benefits outweigh the downsides.
+
+Instead of storing the full pixel color values, only the few colors used
+in a sprite are stored. The color compressed scheme cuts the size
+requirements in half for most sprites and allows for easy palette
+rotation effects. Each pixel 'color' is actually an index into that
+sprites palette of used colors, which then translates to a true RGB
+value. The average character does not even use more than 10 colors, so
+why store a full 8bit, 256 color value? To store the normal 16 colors for
+a sprite, 4 bits are needed per pixel. For 8 colors, only 3 bits per
+pixel; and for monochrome (two color) images, it only takes a single bit
+to represent one pixel.
+
+If you have ever noticed the same enemies with just different colors, or
+on many games that bright white flash when you attack an enemy, it is
+achieved very simply by just changing the palette for that sprite.
+Another advantage of color compression is the game does not need to
+change the value of every single color in the tile, only the associated
+RGB values to those color indexes. Bty, just for correctness, the color
+values are actually stored in the palette as BGR with red as the lowest
+five bits instead of blue (Japanese designers decided to reverse the
+standard order for some reason??). That does not change anything though.
+
+
+2. -- Bitplanes ----------
+
+Except for mode 7 which is different from everything else, each tile is
+arranged from right to left (reverse order), top to bottom. Each byte
+represents one row of eight pixel bits (not complete pixels). The number
+of bytes needed for a single complete row depends on the color depth, or
+actually the number of bits needed to represent that many colors. 1 bit
+tiles would need 1 byte (8 bits) for a single monochrome row; 4 bit tiles
+would need four bytes (32 bits). Unlike most PC graphics formats though,
+instead of all the bits of each pixel being stored next to each other in
+the same byte, they are stored with parallel bits of other pixels in the
+same row. The the first bits of a complete eight pixel row are stored in
+the first byte; all eight of the second bits are stored in the second
+byte, third bits in the third byte, and so on it goes for as many bits as
+it takes to express the necessary colors needed for that tile (from 2
+colors to 256). All of the parallel bits of an entire tile is called a
+bitplane (bpl). Note that screen planes and bitplanes are totally
+different things. To make a whole pixel, all the split bits of a single
+pixel are ORed until the desired bit depth is achieved.
+
+                  3 3 3 3 3 3 3 3 ------- bitplane 3
+                  3 2 2 2 2 2 2 2 2 ----- bitplane 2
+                  3 2 1 1 1 1 1 1 1 1 --- bitplane 1
+                  3 2 1 0 0 0 0 0 0 0 0 - bitplane 0
+                  3 2 1 0 0 0 0 0 0 0 0
+                  3 2 1 0 0 0 0 0 0 0 0   Notice how the bitplanes
+                  3 2 1 0 0 0 0 0 0 0 0   are always zero based.
+                  3 2 1 0 0 0 0 0 0 0 0
+                    2 1 0 0 0 0 0 0 0 0
+                      1 0 0 0 0 0 0 0 0
+                        0 0 0 0 0 0 0 0
+
+For example, if a complete row of 4bit (16 color) pixels had a sequence
+of 4,0,2,7,6,10,15,0 it would be stored like this:
+
+  As pixels:       Then rearranged into bitplanes:
+
+          0123          01234567
+     зддддеее╢        здеееееее╢
+  0 де 4  0100     0 де 00000110  byte 0
+  1 де 0  0000     1 де 10011010  byte 1
+  2 де 2  0010     2 де 00111110  byte 2
+  3 де 7  0111     3 да 00010010  byte 3
+  4 де 6  0110
+  5 де 10 1010
+  6 де 15 1111
+  7 да 0  0000
+
+Notice how the vertical column (parallel bits) become the horizontal rows
+of each bitplane, and how adding another byte to the bitplanes would
+essentially add an extra bit to each of the eight pixels (to make 32
+colors). If the tile above was part of a background which need to first
+be upped to 8bpl tiles, four extra bytes could simply be added to the
+first four to make 8. Do you see how much easier for games to convert one
+bitmode to another if it does not need to do a lot of bit shifting and
+only mess with whole bytes. Many times, SNES sprites will only need 8
+colors and be stored with 3 bits, but since the PPU only supports native
+4bit sprites, they need to have an extra empty bitplane added to them.
+Simply adding an extra byte to every three sure beats a lot of tedious
+shifting and oring. Bty, since SNES sprites (independant moving objects)
+can only be 16 colors, all other bitsize tiles are blit directly to the
+VRAM as static images.
+
+Remember that for any sprite, each pixel value is an index into its 16
+color palette page. The 6 means to plot the absolute color value at index
+6 in the current palette page - that RGB value could actually be
+anything. I heard that there are 16 palettes of 16 colors each in the
+total 256 color main palette, but only 8 of those can be used by sprites?
+It seems like a severe limitation, but somehow those palette masters make
+the most out of it and manage to make the games look like they have more
+colors than they really do.
+
+Unfortunately the example I gave above is actually more perfect than the
+tiles really are. The bitplanes are not all nice and neat, with one
+coming directly after the previous one. Some are by themselves, while
+others are interleaved with each other. This extra convolution really
+does not help us in finding graphics, but it is easy enough to compensate
+for.
+
+
+3. -- All known formats listed --
+
+There are six common modes used by SNES games to store graphics. Four are
+color compressed modes that use 1-4 bits to express a single pixel value.
+The other two are both 8bit modes that use all 256 colors (meaning no
+palette pages). One of them is the famous mode 7 we were all so impressed
+by in 1991 (and it's still cool). The GameBoy uses the exact same 1 & 2
+bit formats that the SNES uses, except that instead of pixels translating
+to colors, they only translate to shades of grey. There are also two
+formats (1bit,2bit) used by just a few games that have 8x12 tile sizes.
+
+Three of the familiar formats (1,2,4) I learned from various docs. The
+other three (3,7,8) I figured out myself with some trial and error. Modes
+3 & 7 nobody knew about and no docs previously existed on them - that's
+partly why I wrote this. The only doc on 8bpl wasn't even right.
+
+Each mode has a few positions in games where you can find an image in
+that mode. They are all fairly common games, with the positions given as
+you would find them in SMCs with the 512 byte header (for a pure ROM
+without a header, subtract those first 512 bytes). Since the first byte
+is always one when working with file records in Qbasic, all of the
+positions are one-based (instead of zero-based).
+
+Along with the format info, there is also a little sample letter 'A' for
+each mode.
+
+Bty, you can easily figure a tile's size the formula (h x w) * bits \ 8.
+In the case of normal size tiles, the eights cancel and you only need use
+8 * bits.
+
+
+-- 1bit bitplane 8x8 --
+2colors, 8 bytes: Used most commonly for monochrome fonts
+
+  This is of course the simplest one, with just 1 bitplane, each row
+coming right after the previous one. It was learned from the Yoshi doc.
+
+No examples (can't remember any right now)
+
+Byte 0| Row 0| Bpl 0|  00011000    0 /-- <====Bitplane 0
+     1|     1|     0|  00111100    1 |--
+     2|     2|     0|  01100110    2 |--
+     3|     3|     0|  11000011    3 |--
+     4|     4|     0|  11111111    4 |--
+     5|     5|     0|  11000011    5 |--
+     6|     6|     0|  11000011    6 |--
+     7|     7|     0|  11000011    7 \--
+
+
+-- 2bit bitplane 8x8 --
+4colors, 16 bytes: Used in lots of places in SNES and GB
+
+Zelda: 459265-FamiliarFont
+ZeldaGB: 196609-StartOfGraphics,252929-MoreStuff
+Metroid 3: 865283-MapPieces
+
+  Gameboy uses this mode for its sprites, with 4 shades of grey. The SNES
+usually does not use it for sprites, but more commonly text and things
+that needs more than just 2 colors. It is similar to 1bpl in that the
+rows comes sequentially, except that it is made of two interleaved 1bpl
+bitplanes. This one was explained in the Pan doc, and the VileWrath
+source code.
+
+Byte 0| Row 0| Bpl 0|  00011000    0 /-- <=====Bitplane 0
+     1|     0| Bpl 1|  00000000      | --\ 0 <=Bitplane 1
+     2|     1|     0|  00111100    1 |-- |
+     3|     1|     1|  00000000      | --| 1
+     4|     2|     0|  01100110    2 |-- |
+     5|     2|     1|  00000000      | --| 2
+     6|     3|     0|  11000011    3 |-- |
+     7|     3|     1|  00000000      | --| 3
+     8|     4|     0|  11111111    4 |-- |
+     9|     4|     1|  00000000      | --| 4
+    10|     5|     0|  11000011    5 |-- |
+    11|     5|     1|  00000000      | --| 5
+    12|     6|     0|  11000011    6 |-- |
+    13|     6|     1|  00000000      | --| 6
+    14|     7|     0|  11000011    7 \-- |
+    15|     7|     1|  00000000        --/ 7
+
+
+-- 3bit bitplane, 8x8 --
+8colors, 24 bytes: Used a lot in RPG games to save space
+
+Zelda: 553473-Weapons
+FF2: 295425-Enemies,374041-Characters,407745-MoreCharacters
+
+  When sprites need more than 4 but not quite 16 colors, this is usually
+the format they choose. It is not a native format of the SNES though, so
+games must translate them into 4bit sprites first. The GameBoy does not
+support this mode since the GB PPU only displays 4 shades of grey. The
+first 2 bitplanes (0,1) are interleaved like 2bpl and the third (2) is a
+single 1bpl that comes at the end of them. Why didn't anybody else find
+out about this one before me, since it is used in so many games? Well
+technically, the SNES programmers 'discovered' it long before I even knew
+about emulation (it was simply 'rediscovered' :-). So far, I only told
+one person about this precious mode and only his viewer supports it
+(Magnus Runesson's SMC-Ripper). That may change though as soon everybody
+else gets a fair chance at it and this doc is released publicly.
+
+Byte 0| Row 0| Bpl 0|  00011000    0 /-- <=====Bitplane 0
+     1|     0| Bpl 1|  00000000      | --\ 0 <=Bitplane 1
+     2|     1|     0|  00111100    1 |-- |
+     3|     1|     1|  00000000      | --| 1
+     4|     2|     0|  01100110    2 |-- |
+     5|     2|     1|  00000000      | --| 2
+     6|     3|     0|  11000011    3 |-- |
+     7|     3|     1|  00000000      | --| 3
+     8|     4|     0|  11111111    4 |-- |
+     9|     4|     1|  00000000      | --| 4
+    10|     5|     0|  11000011    5 |-- |
+    11|     5|     1|  00000000      | --| 5
+    12|     6|     0|  11000011    6 |-- |
+    13|     6|     1|  00000000      | --| 6
+    14|     7|     0|  11000011    7 \-- |
+    15|     7|     1|  00000000        --/ 7
+    16|     0| Bpl 2|  11100111    0 /-- <=====Bitplane 2
+    17|     1|     2|  11000011    1 |--
+    18|     2|     2|  10011001    2 |--
+    19|     3|     2|  00111100    3 |--
+    20|     4|     2|  00000000    4 |--
+    21|     5|     2|  00111100    5 |--
+    22|     6|     2|  00111100    6 |--
+    23|     7|     2|  00111100    7 \--
+
+
+-- 4bit bitplane 8x8 --
+16 colors, 32 bytes: The native format of SNES sprites
+
+Zelda: 524801-Link
+Mario AllStars: 1820687-Mario3,Almost anywhere else
+FF2: 852481-Characters
+Metroid 3: 467969-Zebes,885249-Samus
+
+  This is the actual native format used by the SNES for sprites. Often
+times games will store them in this format because the sprites require
+nearly all 16 colors, it is just easier, or they are not concerned about
+storage space and do not want to be bother with conversion. For example,
+while most images in Zelda are compressed (annoyingly) because of the
+small ROM size, the ones in Super Metroid can afford to be expanded. That
+game have so much space (3MB), it can even afford to waste some space.
+4Bpl is like two 2bpl tiles together, with the first 2 bitplanes (0,1) in
+the first 2bpl tile and the last 2 bitplanes (3,4) in the second 2bpl
+tile. The Corsair doc is surprisingly the only accurate one I've seen on
+this so common mode.
+
+Byte 0| Row 0| Bpl 0|  00011000    0 /-- <=====Bitplane 0
+     1|     0| Bpl 1|  00000000      | --\ 0 <=Bitplane 1
+     2|     1|     0|  00111100    1 |-- |
+     3|     1|     1|  00000000      | --| 1
+     4|     2|     0|  01100110    2 |-- |
+     5|     2|     1|  00000000      | --| 2
+     6|     3|     0|  11000011    3 |-- |
+     7|     3|     1|  00000000      | --| 3
+     8|     4|     0|  11111111    4 |-- |
+     9|     4|     1|  00000000      | --| 4
+    10|     5|     0|  11000011    5 |-- |
+    11|     5|     1|  00000000      | --| 5
+    12|     6|     0|  11000011    6 |-- |
+    13|     6|     1|  00000000      | --| 6
+    14|     7|     0|  11000011    7 \-- |
+    15|     7|     1|  00000000        --/ 7
+Beginning of the second 2bpl tile
+    16|     0|     2|  00000000    0 /-- <=====Bitplane 2
+    17|     0|     3|  00000000      | --\ 0 <=Bitplane 3
+    18|     1|     2|  00000000    1 |-- |
+    ...                ...
+    29|     6|     3|  00000000      | --| 6
+    30|     7|     2|  00000000    7 \-- |
+    31|     7|     3|  00000000        --/ 7
+
+
+-- 8bit bitplane 8x8 --
+256colors, 64 bytes: Used for title screens and detailed images
+
+Mario AllStars: 33280-TitleScreen,1409551-SelectionScreen
+Official SNES Test ROM: 164353-MarioFlying
+
+  When there needs to be a colorful picture like an opening screen or
+part of a story, this is the one to use since it makes use of all 256
+colors. It can not be used for sprites, so any parts of the picture that
+need to move or be animated (usually they don't move though) must be
+changed manually by the game code. It is just four 2bpl tiles, one after
+another (or you can think of it as two 4bpl tiles). The first two
+bitplanes (0,1) are followed by the next two (2,3), then the fixth and
+sixth (4,5), and lastly the seventh and eighth (6,7). Only two viewers
+support it. Despite the fact that no documents explained this mode, it
+was easy enough to figure out.
+
+Byte 0| Row 0| Bpl 0|  0 /-- <=====Bitplane 0
+     1|     0| Bpl 1|    | --\ 0 <=Bitplane 1
+     2|     1|     2|  1 |-- |
+      ...                ...
+    13|     6|     3|    | --| 6
+    14|     7|     2|  7 \-- |
+    15|     7|     3|      --/ 7
+Beginning of the second 2bpl tile
+    16|     0|     2|  0 /-- <=====Bitplane 2
+    17|     0|     3|    | --\ 0 <=Bitplane 3
+    18|     1|     2|  1 |-- |
+    ...                ...
+    29|     6|     3|    | --| 6
+    30|     7|     2|  7 \-- |
+    31|     7|     3|      --/ 7
+Beginning of the third 2bpl tile
+    32|     0|     2|  0 /-- <=====Bitplane 4
+    33|     0|     3|    | --\ 0 <=Bitplane 5
+    34|     1|     2|  1 |-- |
+    ...                ...
+    45|     6|     3|    | --| 6
+    46|     7|     2|  7 \-- |
+    47|     7|     3|      --/ 7
+Beginning of the fourth 2bpl tile
+    48|     0|     2|  0 /-- <=====Bitplane 6
+    49|     0|     3|    | --\ 0 <=Bitplane 7
+    50|     1|     2|  1 |-- |
+    ...                ...
+    61|     6|     3|    | --| 6
+    62|     7|     2|  7 \-- |
+    63|     7|     3|      --/ 7
+
+
+-- 1bit bitplane 8x12 --
+2colors, 12 bytes: Used in just a few games to save a little space
+
+No examples (have not found any yet)
+
+  This mode is very rare, but since this doc aims to cover all formats,
+it is in here with all the others. It is used whereever tiles need to be
+taller than 8 pixels but not quite 16. In the ROM, it saves about 25%
+more space than it otherwise. Of course, a height of 12 is not a natively
+supported tile height, so before using them in VRAM, the game must
+convert them into two 8x8 tiles - with the first eight rows in the first
+8x8 tile, the last four rows in the second tile, and four blank rows to
+complete the second tile. The format is exactly like 1bpl 8x8s except
+with 12 rows. I have not yet seen any tiles in this mode, but they are
+explained in the doc by David Timko. So far, no major viewer specifically
+supports it, although is is possible to still edit these tiles using the
+more common 1bpl mode.
+
+Byte 0| Row 0| Bpl 0|  00011000    0 /-- <=====Bitplane 0
+     1|     1|     0|  00011000    1 |--
+     2|     2|     0|  00111100    2 |--
+     3|     3|     0|  01100110    3 |--
+     4|     4|     0|  01100110    4 |--
+     5|     5|     0|  11000011    5 |--
+     6|     6|     0|  11000011    6 |--
+     7|     7|     0|  11111111    7 |--
+     8|     8|     0|  11111111    8 |--
+     9|     9|     0|  11000011    9 |--
+    10|    10|     0|  11000011   10 |--
+    11|    11|     0|  11000011   11 \--
+
+
+-- 2bit bitplane 8x12 --
+4colors, 24 bytes: Used in just a few games to save a little space
+
+FF3: About halfway through
+ChronoTrigger: At the very end
+
+  A variation of previous mode that just uses two 1bit 8x12s to make a
+single 2bit tile. This mode is also used where tiles need to be taller
+than 8 but less than 16 pixels, and saves about 25% more space than two
+8x8 tiles would. This has not been personally verified yet, so the format
+written below might not be right. Again, I got it from the informative
+doc by David Timko.
+
+Byte 0| Row 0| Bpl 0|  00011000    0 /-- <=====Bitplane 0
+     1|     1|     0|  00011000    1 |--
+     2|     2|     0|  00111100    2 |--
+     3|     3|     0|  01100110    3 |--
+     4|     4|     0|  01100110    4 |--
+     5|     5|     0|  11000011    5 |--
+     6|     6|     0|  11000011    6 |--
+     7|     7|     0|  11111111    7 |--
+     8|     8|     0|  11111111    8 |--
+     9|     9|     0|  11000011    9 |--
+    10|    10|     0|  11000011   10 |--
+    11|    11|     0|  11000011   11 \--
+Beginning of second 1bit 8x12 tile
+    12|     0|     1|  00000000    0 /-- <=====Bitplane 1
+    13|     1|     1|  00000000    1 |--
+    14|     2|     1|  00000000    2 |--
+    15|     3|     1|  00000000    3 |--
+    16|     4|     1|  00000000    4 |--
+    17|     5|     1|  00000000    5 |--
+    18|     6|     1|  00000000    6 |--
+    19|     7|     1|  00000000    7 |--
+    20|     8|     1|  00000000    8 |--
+    21|     9|     1|  00000000    9 |--
+    22|    10|     1|  00000000   10 |--
+    23|    11|     1|  00000000   11 \--
+
+
+-- 8bit mode7 8x8 --
+256colors, 64 bytes: Used whereever cool effects are needed
+
+Zelda: 803329-ScalableMapPieces
+So far Zelda is the only game I have really looked for Mode 7 graphics
+in. A game like ActRaiser probably has lots of map pieces in it. Mario
+Kart might also be a good source.
+
+  This mode is very different from all the others. Instead of messing
+with bitplanes and palettes, all bytes represent a single pixel that
+corresponds to a color in the main palette. The difference between this
+format and 8bpl, is that this mode can be used (with the help of some
+great hardware) in awesome scaling, parallaxing, and rotation. The image
+data is stored almost exactly the same as in VRAM, except in VRAM each
+pixel is byte interleaved with other data. In the ROM, the bytes are
+contiguous. I feel silly for not getting it right for so long, since it
+is so simple. So far, at the time this document was written, no major
+viewer supports it. Because it does not use bitplanes, it is a lot
+simpler to view, edit, and explain!
+
+Bytes 0-7  | Row 0|  ---HI---
+Bytes 8-15 | Row 1|  --MYNA--
+Bytes 16-23| Row 2|  -ME--IS-
+Bytes 24-31| Row 3|  DW----AY
+Bytes 32-39| Row 4|  NEANDILO
+Bytes 40-47| Row 5|  VE----TH
+Bytes 48-55| Row 6|  ES----NE
+Bytes 56-63| Row 7|  S!----:)
+
+
+-- The unknown mode --
+? colors, ? bytes
+
+Sailor Moon: 137139
+Metroid 3: 829985,1868289 (this spot is bugging me)
+
+  This space is for the future modes not figured out yet, many of them in
+Japanese ROMs. How do I know there are undiscovered modes remaining? When
+looking through certain games, all of the graphics simply are not
+accounted for. They must be in there somewhere though, stored somehow.
+Then there are those areas that just have to be to graphics, but are just
+slightly messed up somehow (like 3pl used to be). According to Pan, there
+may be another format of storing 2bit tiles where they composed of two
+1bpl tiles, but that has not been verified anywhere. Although these are
+all the common modes, I'm always on the lookout for new ones while
+browsing through ROMs. If you have any not yet listed please do tell.
+This list won't be complete until we have every single format used by
+every game.
+
+
+4. -- What viewers support them --
+
+  The most common modes (1,2,4) are supported by any self-respecting
+editor. The other three (3,7,8) have apparently never been figured out
+before or something, because in the past six years that info on the SNES
+has been around on the net, editors have only had those first three modes
+(except X-char which had 8bit :-). Mode 7 is still not supported by any
+viewer (except in a little BASIC program I wrote for the sole purpose of
+discovering these modes). The last two 8x12 modes are irregular, but
+could easily be supported by viewers if somebody would only make it.
+
+  Viewer:     Author:          Modes:
+
+  Nagav       L. Bontes        1 2   4      Fastest
+  X-char      Planet X         1 2   4   8  Confusing
+  Visor       Lord Esnes       1 2   4      Slow
+  SMC-Ripper  Magnus Runesson  1 2 3 4   8  Great GUI and easy editing
+  SpriteView  FDwR             1 2 3 4 7 8  Good tile finding features
+
+  All of these viewers are available on the net. There may
+be some others I've simply not come across. There is no editing in
+SpriteView, just viewing, since it's purpose is to discover new
+graphics modes. If you want to edit tiles, try one of the other viewers.
+
+
+5. -- Problems finding sprites --
+
+Programmers use a variety of techniques to save space (they only have a
+max of four megabytes to cram all of their into) and since graphics
+usually use the most of that space, they will come up with all kinds of
+clever ways to fit more in less, most of which I never thought of before.
+Sadly these 'wonderful' compression techniques can also make it hard for
+us to find/edit the images, so some of them are explained below.
+
+-- Symmtetrical Reduction --
+Any symmetrical object is the same on one side as it is on the other, so
+why not just store the left side (or the right side) and flip a copy of
+it to make the other side of it? This also works with objects vertically
+symmetrical. Some objects can even have radially symmetry, and need to
+flipped four directions for complete repiecing. So do not bother looking
+for the other side is when an object seems to be cut in half, or just a
+quarter. When you edit one side, you also affect other(s). Try Mario
+Allstars at 1696783 with a wrap width of 1 for an example of half tiles.
+
+-- Tile crowding --
+This technique makes use out of empty space, duplicate tiles, or tiles of
+a single solid color by storing other tiles in there. That means you can
+actually find pieces of one sprite inside another. There is nothing you
+can do about it, just remember that is why the tiles look so scrambled.
+You can see a little bit of this in AllStars at 1663503.
+
+-- Row stripping --
+Similar to tile crowding, instead of storing the entire rectangular
+picture of an irregularly shaped image, only the signifigant sections are
+stored. Most of the time, images are kept as a whole in their rectangluar
+frame for simplicity, but when they become too large, the blank space on
+either side of the object really adds up, so it is simply not stored. If
+an object is wide at the top, strips long enough to hold that entire tile
+row are stored. Then as the object becomes skinnier towards the base, the
+length of the strips becomes shorter and closer together. You can see a
+lot of this in DKC (take a look at 289483), and it is really annoying. To
+see the images as they are supposed to look, you just need to change the
+wrap width until the strips align (oddly none of the existing viewers
+supported this).
+
+-- Color compression --
+Color compression was already explained above, but I just wanted to
+mention again that because what is stored (except in 8bit modes) is
+actually color indexes rather than RGB values, so the colors will look
+all wrong when viewing images. It really helps to load the right palette
+and see them in their true colors. Most of the time, it makes finding
+images easier. You can get the color palette to any image in the ROM by
+simply playing the game and exporting a snapshot of it to a PCX file
+(GIFs are no good because they rearrange the palette colors). Games do
+dynamically change their palette though as the player moves from title
+screen to map screen, underwater level to desert level, so be sure to
+grab a snapshot from the scene that the desired image is a part of. As of
+the time this doc was written, no other viewer can load snapshot
+palettes, but SMC-Ripper will soon!
+
+-- Bitplanes out of phase --
+This is not a compression technique, but it is commonly a problem. When
+the base byte position is not aligned to the first bitplane of row 0, the
+bitplanes will be out of phase. That means the wrong bitplane will be in
+front and because the tile starts at the wrong place in the pattern, all
+of the images will look funky - sprites with inverse coloring, part of
+one sprite mixed up with another. You might be able to see the generic
+outline of the object there, but something about it is not quite right.
+To fix this, just adjust the base byte position until it looks right
+(meaning the bitplanes are in phase and the pattern starts out on the
+right row). For most viewers, the '+' and '-' keys are used for this
+purpose.
+
+Sometimes you will encounter some data that looks like graphics, but is
+really just something else. You might simply be looking at it in the
+wrong mode, or the bitplanes could be out of phase, but there are also
+other repetitive data structures stored in ROMs that could be fooling
+you. The most common thing to look like graphics is level grids. Then
+again, who knows, maybe you are actually looking at a new mode and just
+don't know it.
+
+
+6. -- Thanks, credits, and sources --
+
+That should have explain enough about graphics and tile formats to
+satisfy the most curious of you, and even tell enough to make your own
+viewer if you want. If you want to write a viewer yourself and have any
+questions, or have modes not already in here, please mail me a letter.
+Please send other questions though like how the SNES works, how to use
+any of the above listed sprite editors, or anything else to the right
+people. :-)
+
+Why in the world did I just sit down and write this long doc? Because I
+love the SNES and its games, and want to add my favorite characters to my
+own games or have fun messing with them in their own game. This was
+written for anybody else out there that might want to do the same. This
+version should do it for a while, but as soon as any more modes are
+discovered, I'll be sure to add them to a later one. ;-)
+
+
+Here are some people that without knowing it helped with this doc:
+  Yoshi for his informative docs about everything on the SNES
+  Dax for the helpful, but innacurate info on screen formats
+  Corsair+Kari for the SNES 4bpl mode
+  Pan/Anthrox for the GameBoy information
+  VileWrath for writing the easy to understand BASIC source code
+    I did not actually understand bitplanes until then
+  Savoury Snax for explaining how one bitmode is converted to another
+  David Timko for his doc about 8x12 tiles
+  Magnus Runesson for making his SMC-Ripper
+  Everybody else who made a tile viewer and wrote a doc too
+  All of you who care to read (and hopefully add to) this
+
+
+Lots of good sources to find more information or get utilities:
+  Emulation Programmer's Resource - docs on various systems
+	http://classicgaming.com/epr/
+  SMC-ripper's official homepage - the best tile viewer
+	http://home.bip.net/magnusr/
+  EMU News Service - the latest emulation news
+	http://members.aol.com/emunews/
+  SNEeSe HomePage - some good source code for an emulator
+	http://www.fortunecity.com/olympia/baberuth/24/index.html
+  SNES Designers, developers corner - lots of SNES docs
+	http://emureview.ztnet.com/developerscorner/index.htm
+  Node99 System Documents - docs on various systems
+	http://mana.simplenet.com/node99/docs.html
+  SNES Programming - docs
+	http://members.pgonline.com/~gau/snes.html
+  Alamak! SNES Emulation! Generation EX - docs
+	http://www.alamak.com.sg/freehome/Singapore/SNES/
+  SNES File Library - utilities
+	http://ets.simplenet.com/snes/files.html
+  Patent Pending: Utilities: Super Nintendo - utilities
+	http://netside.simplenet.com/pp/emulators/utilities/snes.html
+  NES Emulator Documents - NES docs
+	http://ets.simplenet.com/snes/texts.html
+  Anime SNES Roms - for those rare Japanese ROMs
+	http://www.gate.net/~mamo/animesnes.htm
+  Welcome To The Snes Emulation Centre - docs
+	http://freespace.virgin.net/cm.wright/
+	ftp://teeri.oulu.fi/pub/console/nintendo/ - my first doc site
+  Zophar's Domain - docs
+	http://zophar.internexus.net/
+  Harry Mulder's Gameboy Development - GB docs
+	http://home.worldonline.nl/~hpmulder/gb/main.html
+  Jeff Frohwein's GameBoy Technical Page - GB docs
+	http://fly.hiwaay.net/~jfrohwei/gameboy/home.html
+  The Holy Sector of Nintendo Emulation
+	http://www.alabanza.com/mercuryz/Nes.html
+  The SNES HQ
+	http://www.northcoast.com/~mbruce/
+
+Some links may be old - have not checked up on them all. Just check all
+the sites, each one is good and has a little bit the others might not.
+
+For comments, corrections, or additions:  FDwR@hotmail.Com (Frank Dwayne)

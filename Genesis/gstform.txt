@@ -1,0 +1,69 @@
+ ----------------------------------------------------------------------------
+ genecyst save state format
+ ----------------------------------------------------------------------------
+
+ All addresses/ranges are given as hexadecimal offsets in a '.GS0' file.
+
+ Range        Size   Description
+ -----------  -----  -----------
+ 00000-00002  3      "GST"
+ 00006-00007  2      "\xE0\x40"
+ 000FA-00112  24     VDP registers
+ 00112-00191  128    Color RAM
+ 00192-001E1  80     Vertical scroll RAM
+ 001E4-003E3  512    YM2612 registers
+ 00474-02473  8192   Z80 RAM
+ 02478-12477  65536  68K RAM
+ 12478-22477  65536  Video RAM
+
+ All data is stored in little endian format, except for the Vertical
+ Scroll RAM, 68000 RAM, and Video RAM, which are in big endian format.
+
+ Z80 registers
+ -------------
+
+ 00404 : AF
+ 00408 : BC
+ 0040C : DE
+ 00410 : HL
+ 00414 : IX
+ 00418 : IY
+ 0041C : PC
+ 00420 : SP
+ 00424 : AF'
+ 00428 : BC'
+ 0042C : DE'
+ 00430 : HL'
+ 00434 : I
+
+ The 'R' register is not supported.
+ The interrupt mode is always presumed to be 'IM 1'
+
+ 68000 registers
+ ---------------
+
+ 80-9F : D0-D7
+ A0-BF : A0-A7
+ C8    : PC
+ D0    : SR
+
+ Missing Info
+ ------------
+
+ SN76489 data
+ VDP state
+
+ Miscellaneous
+ -------------
+
+ The 68000 register locations came from the DGen source code.
+
+ Bart Trzynadlowski supplied the byte ordering and header validity
+ information.
+
+ Any information on the KGen save state layout would be appreciated.
+
+
+ Charles MacDonald
+ WWW: http://www.emucamp.com/cgfm2/
+

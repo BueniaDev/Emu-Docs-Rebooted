@@ -1,0 +1,380 @@
+
+ Super Magic Drive hardware information
+ by Charles MacDonald
+ WWW: http://cgfm2.emuviews.com
+
+ Version 0.2
+
+ What's new:
+ - Added note on DRAM refresh disable.
+ - Added information on SMS memory map and ROM banking.
+ - Added interesting RAM locations set up by the BIOS.
+ - Added information on consoles supporting Mark-III mode.
+ - Added some notes on the SMD Plus.
+
+ ----------------------------------------------------------------------------
+ Overview
+ ----------------------------------------------------------------------------
+
+ The Super Magic Drive is a backup device for the Sega Mega Drive.
+ It was produced by Front Far East in the early 1990's.
+
+ The SMD allows users to copy cartridge data to disk, then load games off
+ the disk without needing the cartridge again. It also has features
+ for supporting battery-backed RAM present in some game cartridges, as
+ well as providing functions for disk management.
+
+ The SMD consists of the following components:
+
+ - Altera EP1018LC-45 PLD
+ - Motorola MCS3201 FDC
+ - Toshiba CMOS SRAM (256k bits, battery backed)
+ - EPROM (64k bits, for BIOS)
+ - 16 megabits of DRAM (some models may have more or less)
+
+ I've based all of this information on my original SMD model from 1992, as
+ well as input from owners of other SMD and SMD Plus units.
+
+ Any information on other variations of the SMD would be appreciated.
+
+ ----------------------------------------------------------------------------
+ The BIOS
+ ----------------------------------------------------------------------------
+
+ The SMD BIOS is a Z80 program that runs in Mark III compatability mode.
+ This is a feature of Mega Drive consoles that allows Mark III programs
+ to be used, and is how devices like the Power Base Converter work.
+
+ The original Genesis and Genesis 2 models support this mode, while
+ the Majesco Genesis 3 does not.
+
+ ----------------------------------------------------------------------------
+ Z80 memory map
+ ----------------------------------------------------------------------------
+
+ The SMD provides an alternate memory map when the BIOS code is running.
+
+ $0000-1FFF : ROM
+ $2000-3FFF : I/O registers
+ $4000-7FFF : Bank #1 (Lower 16K of SRAM, or banked cartridge ROM)
+ $8000-BFFF : Bank #2 (Upper 16K of SRAM, or banked copier DRAM)
+ $C000-DFFF : RAM
+ $E000-FFFF : RAM (mirror)
+
+ The BIOS appears to only use memory at $DA00-DFFF, leaving the rest
+ free for use. Here are some important memory locations:
+
+ $DFF0      - Cartridge size, in 16k units.
+              Not all cartridges can be properly detected.
+
+ $DFF1      - Available DRAM size, in 16k units.
+
+ $DC00-DDFF - Copy of SMD header (either from a loaded image or generated
+              by the BIOS itself)
+
+ The SMD Plus BIOS, as well as a SMD BIOS from 1993 return the size
+ information at $DFF0 and $DFF1 in units of 128k instead of 16k.
+
+ When in not in the BIOS mode, the memory map is different:
+
+ $0000-7FFF : ROM (fixed)
+ $8000-BFFF : ROM bank #3
+ $C000-DFFF : RAM
+ $E000-FFFF : RAM (mirror)
+
+ Writing to any address between $E000-FFFF will select the DRAM bank
+ mapped to ROM bank #3, only the lower six bits ($00-3F) are used.
+ This means the largest program loaded must be 1 megabyte or less.
+
+ The banking scheme is not fully compatible with the type of memory mapping
+ used in some SMS and GG games in the following ways:
+
+ - ROM bank #1 is not present
+ - ROM bank #2 is not present
+ - Battery backed RAM pages cannot be mapped into ROM bank #3.
+ - ROM bank #3 will be set incorrectly if any address within $E000-FFFF
+   is written to.
+
+ ----------------------------------------------------------------------------
+ BIOS registers
+ ----------------------------------------------------------------------------
+
+ $2000 - Select cartridge ROM / copier DRAM page
+
+ pppppppp (w/o)
+
+ p = Selects 16K page of cartridge ROM at 4000-7FFF, and also the
+     16K page of copier DRAM at $8000-BFFF.
+
+     A maximum of 256 pages are supported, so cartridges up to 4MB are
+     the largest size that can be backed up.
+
+     68000 ROM wil appear in an interleaved format, with the first 8K
+     being the even bytes and the remaining 8K being the odd bytes of
+     a 16K block. This does not occur with Z80 ROM, though I'm not
+     sure why. When reading cartridge data from the banked ROM area,
+     or loading data into copier DRAM, the data will be in this format.
+
+ $2001 - Memory and mode control
+
+ -----smm (w/o)
+
+ s = When set, the lower 16K of SRAM is mapped to 4000-7FFF, and the
+     upper 16K is mapped to 8000-BFFF. When cleared, the ROM and DRAM
+     pages selected by $2000 will be present.
+
+     The SMD Plus BIOS (as well as the VGS source) set this bit when the
+     loaded game is larger than 16 megabits.
+
+     On a normal SMD, the copier DRAM is not refreshed when this bit
+     is set.
+
+ m = This controls the operating mode of the hardware, as well as
+     where program code is executed from.
+
+     00 - Enable Mark III compatability mode, run Z80 code
+          in BIOS ROM.
+
+     01 - Enable Mark III compatability mode, run Z80 code
+          in copier DRAM.
+
+     10 - Disable Mark III compatability mode, run 68K code
+          in cartridge ROM.
+
+     11 - Disable Mark III compatability mode, run 68K code
+          in copier DRAM.
+
+     A value of $00 is written during startup, but that is probably
+     the default state of the machine. The BIOS code wouldn't run
+     otherwise.
+
+ ----------------------------------------------------------------------------
+ Parallel I/O registers
+ ----------------------------------------------------------------------------
+
+ $2002 - Data input and output
+
+ ----wwww (w/o)
+ rrrrrrrr (r/o)
+
+ w = Writes four bits of data to be read by the PC.
+
+ r = Returns eight bits of data written by the PC.
+     The SMD busy flag is inverted when this register is read.
+
+ $2003 - PC data busy flag
+
+ f------- (r/o)
+
+ f = PC data busy flag
+
+ ----------------------------------------------------------------------------
+ Parallel I/O details
+ ----------------------------------------------------------------------------
+
+ The parallel port is connected to the PC like so:
+
+ LPT output register
+
+ wwwwwwww (w/o)
+
+ w = Data written to the SMD.
+
+ LPT status register
+
+ fdddd--- (r/o)
+
+ f = Busy flag for the SMD.
+ d = Data read from the SMD.
+
+ LPT control register
+
+ -------f (r/w)
+
+ f = Busy flag for the PC.
+
+ To send a byte to the SMD
+
+ - Wait until the SMD's busy bit is set.
+ - Send data to the output register.
+ - Invert the PC's busy flag.
+
+ To recieve a byte from the SMD
+
+ - Wait until the SMD's busy bit is cleared.
+ - Read the low bits of a nibble from the status port.
+ - Invert the PC's busy flag.
+ - Wait until the SMD's busy bit is zero.
+ - Read the high bits of a nibble from the status port.
+ - Invert the PC's busy flag.
+
+ ----------------------------------------------------------------------------
+ FDC registers
+ ----------------------------------------------------------------------------
+
+ 2009: (r/o)
+ 200B: (w/o)
+ 200C: (r/w)
+ 200D: (r/o)
+ 200E: (w/o)
+
+ I don't have the Motorola MCS3201 datasheet, so I can't describe these
+ registers in any more detail.
+
+ ----------------------------------------------------------------------------
+ Command format
+ ----------------------------------------------------------------------------
+
+ The SMD will check incoming data from the parallel port while it is in
+ the main menu screen. All data sent is in a generic format, consisting
+ of an 8-bit parameter and two 16-bit arguments. Here is the basic
+ structure of a command:
+
+ Byte 00h - D5h (Identifier 1)
+ Byte 01h - AAh (Identifier 2)
+ Byte 02h - 96h (Identifier 3)
+ Byte 03h - Parameter
+ Byte 04h - Address (low)
+ Byte 05h - Address (high)
+ Byte 06h - Length (low)
+ Byte 07h - Length (high)
+ Byte 08h - Checksum
+
+ The checksum is the result of the value 81h XOR'd with bytes 00h though 07h.
+
+ ----------------------------------------------------------------------------
+ Parameter list
+ ----------------------------------------------------------------------------
+
+ $00 - Upload data
+         
+       address.w - Z80 address to load data at.
+       length.w  - Length of data to load.
+
+       After sending the command, write the data to the parallel port while
+       checksumming it, and then send the checksum.
+
+ $01 - Download data
+
+       address.w - Z80 address to read data from.
+       length.w  - Length of data to read.
+
+       After sending the command, read the data from the parallel port while
+       checksumming it, and then read the checksum which can be compared
+       with the one you generated.
+
+ $02 - Upload VRAM
+
+       address.w - VDP command word.
+       length.w  - Length of data to load.
+
+       After sending the command, write the data to the parallel port while
+       checksumming it, and then send the checksum.
+
+ $03 - Download VRAM
+
+       address.w - VDP command word.
+       length.w  - Length of data to read.
+
+       After sending the command, read the data from the parallel port while
+       checksumming it, and then read the checksum which can be compared
+       with the one you generated.
+
+ $04 - Force Z80 Jump
+
+       address.w - Address for the Z80 to jump to.
+       length    - Set to zero.
+
+ $05 - Set copier DRAM / cartridge ROM page
+
+       address.l - Value is written to $2000.
+       length    - Set to zero.
+
+ ----------------------------------------------------------------------------
+ File formats
+ ----------------------------------------------------------------------------
+
+ All files generated and accepted by the SMD have a 512-byte header.
+ The basic layout is as follows:
+
+ Byte 00h : Size of file.
+ Byte 01h : File data type.
+ Byte 02h : Status flags.
+ Byte 08h : Identifier 1.
+ Byte 09h : Identifier 2.
+ Byte 0Ah : File type.
+
+ The file size is in units of 16K.
+
+ The file data type can have the following values:
+
+ 00h - 32K SRAM data
+ 01h - Z80 program
+ 02h - BIOS program, loaded at $8000
+ 03h - 68000 program
+
+ Bit 6 of the status flags is set for a multiple file set.
+ A single file, or the last file in a set, will have bit 6 cleared.
+ The function of the remaining flags is unknown.
+
+ According to some SWC programming information, if the two identifier
+ bytes are set to AAh and BBh, respectively, then byte 0Ah is valid
+ and can have the following settings:
+
+ 06h - 68000 game file
+ 07h - SRAM file
+
+ This seems to be for identification purposes only, the BIOS does not
+ seem to check these values.
+
+ ----------------------------------------------------------------------------
+ Miscellaneous
+ ----------------------------------------------------------------------------
+
+ The BIOS routine which starts a Z80 program that has been loaded off disk
+ has two problems; it is located in ROM, which will be paged out when
+ $2001 is written to, and furthermore afterwards it jumps to $8000, which
+ is not the valid entry point for a Z80 program. (the last point is a
+ consideration if the effects of writing to $2001 do not occur immediately)
+
+ Most all Z80 programs therefore need to have the RESET button pressed, as
+ they will crash upon loading. Some games will simply lock the machine
+ up, and cannot be used at all.
+
+ The BIOS has no capability to start a game that has been sent though
+ the parallel port. The only option is to send an upload data command
+ and manually write to $2001. This means that the Z80's PC will be in
+ an indeterminate state afterwards.
+
+ One workaround would be to use the upload data and force jump commands
+ to load a small program, which would execute in RAM, initialize the
+ machine, then write $01 to $2001 and jump to $0000. I have developed
+ a file loading utility (available at my webpage) which does this.
+
+ It is not possible to dump Sega Master System cartridges larger than 48K.
+ This is because they have special hardware used for bankswitching, but
+ the SMD cannot access it. (writes to the banked ROM area appear to be
+ ignored) So only the initial data that is mapped in can be read.
+
+ It may be possible, however, to at least dump the first 48K of other
+ software that runs in the Mark III compatability mode, such as
+ multicarts containing SMS games and Phantasy Star MD.
+
+ Even though the SMD has 32K of battery backed RAM, only 16K is usable.
+ This is because Mega Drive games usually have an 8-bit wide RAM chip
+ that is wired to even or odd addresses. In order to support both, the
+ RAM chip in the SMD is wired to both addresses, so games using either
+ type will work properly.
+
+ The SRAM chip is present at $200000-$207FFF in the 68000's address space.
+
+ Some versions of the BIOS do not have the VRAM upload/download commands.
+
+ ----------------------------------------------------------------------------
+ Acknowledgements
+ ----------------------------------------------------------------------------
+
+ - Bart Trzynadlowski for information on the SMD format.
+ - JSI for releasing the VGS source code and SWC programming information.
+ - David, Lestat, and Matthias for their BIOS dumps and assistance.
+

@@ -1,0 +1,188 @@
+                   --------------------------------------
+                     68000 Instruction Usage Statistics
+                     by Bart Trzynadlowski, May 7, 2001
+                   --------------------------------------
+
+
+---------
+  About
+---------
+
+The data here was obtained with my 680X0 emulation library, Genital68K, and
+Genital, my Sega Genesis emulator. Twenty-nine (29) games were profiled, each
+game was left alone for roughly 2 minutes (no control pad input.) The Z80 was
+only turned on for those games which require it to run.
+
+    Games Used:
+    -----------
+
+    After Burner 2
+    Columns 3: Revenge of Columns
+    Cool Spot
+    Contra Hard Corps (USA version)
+    Dr. Robotnik's Mean Bean Machine
+    Dune: The Battle for Arrakis
+    Hard Drivin'
+    Earthworm Jim
+    Earthworm Jim 2
+    Eliminate Down (Z80 enabled)
+    Flashback: The Quest for Identity (Z80 enabled)
+    Gunstar Heroes
+    King of the Monsters 2
+    Mortal Kombat 2 (Z80 enabled)
+    NBA Jam
+    Puggsy (Z80 enabled)
+    Raiden Trad
+    Samurai Spirits
+    Sonic & Knuckles
+    Sonic Spinball
+    Sonic the Hedgehog
+    Sonic the Hedgehog 2
+    Space Harrier 2
+    Splatterhouse 3
+    Streets of Rage 2
+    Streets of Rage 3
+    Strider
+    Super Street Fighter 2: The New Challengers
+    Toejam & Earl 2: Panic on Funkotron
+
+
+--------------
+  Statistics
+--------------
+
+The numbers are how many times each instruction was executed (every instance
+for every game was counted.) Percentages are relative to the total number of
+instructions executed.
+
+Total = 3520169728
+
+TST                 = 18.456861%    (649712832)
+BEQ                 = 16.773160%    (590443712)
+BNE                 = 14.701383%    (517513632)
+MOVE                = 11.716452%    (412439008)
+CMP                 = 7.897858%     (278018016)
+CMPI                = 3.701348%     (130293736)
+DBF                 = 2.890507%     (101750768)
+ADD                 = 2.143055%     (75439184)
+BTST                = 1.936656%     (68173568)
+BCS                 = 1.568744%     (55222464)
+ADDQ                = 1.118771%     (39382632)
+BRA                 = 1.093789%     (38503244)
+LEA                 = 1.057299%     (37218712)
+RTS                 = 1.033851%     (36393304)
+MOVEA               = 0.989770%     (34841584)
+ANDI                = 0.909211%     (32005756)
+ADDA                = 0.750317%     (26412432)
+SUBQ                = 0.639766%     (22520832)
+MOVEQ               = 0.626871%     (22066908)
+SUB                 = 0.614205%     (21621064)
+JSR                 = 0.608587%     (21423292)
+BLT                 = 0.599791%     (21113676)
+BCC                 = 0.569181%     (20036144)
+LSL                 = 0.522729%     (18400952)
+SWAP                = 0.518907%     (18266416)
+LSR                 = 0.467847%     (16469004)
+BSR                 = 0.428488%     (15083507)
+AND                 = 0.420328%     (14796243)
+EXT                 = 0.374897%     (13196998)
+OR                  = 0.365083%     (12851525)
+CLR                 = 0.356954%     (12565402)
+MOVEM               = 0.348804%     (12278484)
+BPL                 = 0.299572%     (10545428)
+MOVE to SR          = 0.288956%     (10171741)
+NOP                 = 0.274307%     (9656057)
+ADDI                = 0.273154%     (9615468)
+BMI                 = 0.217103%     (7642390)
+BGE                 = 0.205655%     (7239399)
+BGT                 = 0.162442%     (5718225)
+JMP                 = 0.157656%     (5549768)
+CMPA                = 0.142774%     (5025877)
+ASL                 = 0.134249%     (4725782)
+SUBI                = 0.129025%     (4541882)
+BLE                 = 0.127413%     (4485147)
+BHI                 = 0.121146%     (4264555)
+MULS                = 0.107794%     (3794521)
+ASR                 = 0.107383%     (3780049)
+RTE                 = 0.100872%     (3550864)
+NEG                 = 0.097832%     (3443853)
+ROL                 = 0.077262%     (2719749)
+BCLR                = 0.071191%     (2506061)
+EOR                 = 0.066257%     (2332349)
+ORI                 = 0.057204%     (2013668)
+NOT                 = 0.055164%     (1941851)
+BLS                 = 0.040060%     (1410186)
+MOVE USP            = 0.039761%     (1399660)
+ROXL                = 0.037814%     (1331103)
+BSET                = 0.036918%     (1299571)
+DBLE                = 0.032138%     (1131318)
+MOVE from SR        = 0.029498%     (1038377)
+SUBA                = 0.027090%     (953630)
+ROXR                = 0.025774%     (907272)
+EORI                = 0.025135%     (884783)
+DIVS                = 0.024461%     (861055)
+MULU                = 0.024249%     (853617)
+ADDX                = 0.020965%     (737994)
+ST                  = 0.017875%     (629233)
+ROR                 = 0.017627%     (620485)
+ORI to SR           = 0.016410%     (577671)
+MOVE to CCR         = 0.013961%     (491464)
+DBEQ                = 0.010752%     (378498)
+DBMI                = 0.009397%     (330773)
+EXG                 = 0.008431%     (296796)
+UNLK                = 0.008253%     (290532)
+LINK                = 0.008235%     (289879)
+DIVU                = 0.007383%     (259897)
+SF                  = 0.006663%     (234560)
+ANDI to CCR         = 0.006177%     (217450)
+BVS                 = 0.005764%     (202919)
+PEA                 = 0.005552%     (195446)
+ANDI to SR          = 0.004015%     (141325)
+BCHG                = 0.003623%     (127552)
+SEQ                 = 0.003220%     (113349)
+BVC                 = 0.002235%     (78677)
+SMI                 = 0.001457%     (51302)
+ORI to CCR          = 0.000962%     (33871)
+SLE                 = 0.000825%     (29043)
+RTR                 = 0.000517%     (18196)
+DBNE                = 0.000284%     (10001)
+TRAP                = 0.000242%     (8509)
+SNE                 = 0.000224%     (7891)
+SBCD                = 0.000091%     (3190)
+DBLS                = 0.000068%     (2382)
+SUBX                = 0.000009%     (310)
+SGE                 = 0.000006%     (210)
+ABCD                = 0.000005%     (179)
+CMPM                = 0.000002%     (73)
+MOVEP               = 0.000001%     (40)
+SCC                 = 0.000001%     (34)
+DBPL                = 0.000001%     (18)
+SCS                 = 0%            (2)
+SPL                 = 0%            (1)
+CHK                 = 0%            (0)
+DBT                 = 0%            (0)
+DBHI                = 0%            (0)
+DBCC                = 0%            (0)
+DBCS                = 0%            (0)
+DBVC                = 0%            (0)
+DBVS                = 0%            (0)
+DBGE                = 0%            (0)
+DBLT                = 0%            (0)
+DBGT                = 0%            (0)
+EORI to CCR         = 0%            (0)
+EORI to SR          = 0%            (0)
+ILLEGAL             = 0%            (0)
+NBCD                = 0%            (0)
+NEGX                = 0%            (0)
+RESET               = 0%            (0)
+SHI                 = 0%            (0)
+SLS                 = 0%            (0)
+SVC                 = 0%            (0)
+SVS                 = 0%            (0)
+SLT                 = 0%            (0)
+SGT                 = 0%            (0)
+STOP                = 0%            (0)
+TAS                 = 0%            (0)
+TRAPV               = 0%            (0)
+Line 1010 Emulator  = 0%            (0)
+Line 1111 Emulator  = 0%            (0)

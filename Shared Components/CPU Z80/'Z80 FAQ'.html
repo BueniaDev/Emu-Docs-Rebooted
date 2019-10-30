@@ -1,0 +1,199 @@
+
+<!-- saved from url=(0059)http://www.zophar.net/fileuploads/2/10809ozrmc/z80_faq.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>'Z80 FAQ'</title>
+<meta name="Microsoft Theme" content="sumipntg 011, default"><style>.adsbygoogle,
+#content > #right > .dose > .dosesingle,
+#content > #center > .dose > .dosesingle,
+#top_rectangle_ad
+{display:none !important;}</style></head>
+
+<body bgcolor="#FFFFFF" text="#808080" link="#3333CC" vlink="#666699" alink="#990099">
+<center><!--#include virtual="/cgi-bin/add-ad.pl" --></center><!--mstheme--><font face="verdana">
+ This is an extract from the comp.sys.sinclair Sinclair ZX Spectrum FAQ v.2.0
+ (July 3 1994), which is maintained by Marat Fayzullin (fms@freeflight.com).
+
+This section is based on the text contributed by Gerton Lunter, author
+of "Z80" Spectrum emulator. I allowed myself to make some changes which
+don't change the content.
+
+
+<h1><!--mstheme--><font color="#003366">Features on Z80 CPU<!--mstheme--></font></h1>
+
+   Most Z80 opcodes are one byte long, not counting a possible byte or
+word operand.  The four opcodes CB, DD, ED and FD are shift opcodes: they
+change the meaning of the opcode following them.
+
+<h2><!--mstheme--><font color="#003366">a) CB opcodes:<!--mstheme--></font></h2>
+   There are 248 different CB opcodes. The block CB 30 to CB 37 is missing
+from the official list. These instructions, usually denoted by the mnemonic
+SLL, Shift Left Logical, shift left the operand and make bit 0 always one.
+These instructions are quite commonly used. For example, Bounder and Enduro
+Racer use them.
+
+<h2><!--mstheme--><font color="#003366">b) DD and FD opcodes:<!--mstheme--></font></h2>
+   The DD and FD opcodes precede instructions using the IX and IY registers.
+If you look at the instructions carefully, you see how they work:
+
+<!--mstheme--></font><pre>        2A nn           LD HL,(nn)
+        DD 2A nn        LD IX,(nn)
+
+        7E              LD A,(HL)
+        DD 7E d         LD A,(IX+d)
+</pre><!--mstheme--><font face="verdana">
+
+A DD opcode simply changes the meaning of HL in the next instruction. If a
+memory byte is addressed indirectly via HL, as in the second example, a
+displacement byte is added. Otherwise the instruction simply acts on IX
+instead of HL (A notational awkwardness, that will only bother assembler
+and disassembler writers: JP (HL) is not indirect; it should have been
+denoted by JP HL). If a DD opcode precedes an instruction that doesn't use
+the HL register pair at all, the instruction is executed as usual. However,
+if the instruction uses the H or L register, it will now use the high or
+low halves of the IX register! Example:
+
+<!--mstheme--></font><pre>        44              LD B,H
+        FD 44           LD B,IYh
+</pre><!--mstheme--><font face="verdana">
+
+These types of inofficial instructions are used in very many programs. By the
+way, many DD or FD opcodes after each other will effectively be NOPs, doing
+nothing except repeatedly setting the flag "treat HL as IX" (or IY) and taking
+up 4 T states (But try to let MONS disassemble such a block.).
+
+<h2><!--mstheme--><font color="#003366">c) ED opcodes:<!--mstheme--></font></h2>
+   There are a number of inofficial ED instructions, but none of them are very
+useful. The ED opcodes in the range 00-3F and 80-FF (except for the block
+instructions of course) do nothing at all but taking up 8 T states and
+incrementing the R register by 2.  Most of the unlisted opcodes in the range
+40-7F do have an effect, however. The complete list: (* = not official)
+
+<!--mstheme--></font><pre>        ED40   IN B,(C)                 ED60   IN H,(C)
+        ED41   OUT (C),B                ED61   OUT (C),H
+        ED42   SBC HL,BC                ED62   SBC HL,HL
+        ED43   LD (nn),BC               ED63   LD (nn),HL
+        ED44   NEG                      ED64 * NEG
+        ED45   RETN                     ED65 * RET
+        ED46   IM 0                     ED66 * IM 0
+        ED47   LD I,A                   ED67   RRD
+        ED48   IN C,(C)                 ED68   IN L,(C)
+        ED49   OUT (C),C                ED69   OUT (C),L
+        ED4A   ADC HL,BC                ED6A   ADC HL,HL
+        ED4B   LD BC,(nn)               ED6B   LD HL,(nn)
+        ED4C * NEG                      ED6C * NEG
+        ED4D   RETI                     ED6D * RET
+        ED4E * IM 0/1                   ED6E * IM 0/1
+        ED4F   LD R,A                   ED6F   RLD
+
+        ED50   IN D,(C)                 ED70 * IN (C)
+        ED51   OUT (C),D                ED71 * OUT (C),0
+        ED52   SBC HL,DE                ED72   SBC HL,SP
+        ED53   LD (nn),DE               ED73   LD (nn),SP
+        ED54 * NEG                      ED74 * NEG
+        ED55 * RET                      ED75 * RET
+        ED56   IM 1                     ED76 * IM 1
+        ED57   LD A,I                   ED77 * NOP
+        ED58   IN E,(C)                 ED78   IN A,(C)
+        ED59   OUT (C),E                ED79   OUT (C),A
+        ED5A   ADC HL,DE                ED7A   ADC HL,SP
+        ED5B   LD DE,(nn)               ED7B   LD SP,(nn)
+        ED5C * NEG                      ED7C * NEG
+        ED5D * RET                      ED7D * RET
+        ED5E   IM 2                     ED7E * IM 2
+        ED5F   LD A,R                   ED7F * NOP
+</pre><!--mstheme--><font face="verdana">
+
+The ED70 instruction reads from port (C), just like the other instructions,
+but throws away the result. It does change the flags in the same way as the
+other IN instructions, however. The ED71 instruction OUTs a byte zero to port
+(C), interestingly.  These instructions "should", by regularity of the
+instruction set, use (HL) as operand, but since from the processor's point of
+view accessing memory or accessing I/O devices is almost the same thing, and
+since the Z80 cannot access memory twice in one instruction (disregarding
+instruction fetch of course) it can't fetch or store the data byte (A hint in
+this direction is that, even though the NOP-synonyms LD B,B, LD C,C etcetera
+do exist, LD (HL),(HL) is absent and replaced by the HALT instruction.).
+
+The IM 0/1 instruction puts the processor in either IM 0 or 1, I couldn't
+figure out which on my own Spectrum.
+
+<h2><!--mstheme--><font color="#003366">d) About the R register:<!--mstheme--></font></h2>
+   This is not really an undocumented feature, although I have never seen any
+thorough description of it anywhere. The R register is a counter that is
+updated every instruction, where DD, FD, ED and CB are to be regarded as
+separate instructions. So shifted instruction will increase R by two. There's
+an interesting exception: doubly-shifted opcodes, the DDCB and FDCB ones,
+increase R by two too. LDI increases R by two, LDIR increases it by 2 times
+BC, as does LDDR etcetera.  The sequence LD R,A/LD A,R increases A by two,
+except for the highest bit: this bit of the R register is never changed. This
+is because in the old days everyone used 16 Kbit chips. Inside the chip the
+bits where grouped in a 128x128 matrix, needing a 7 bit refresh cycle.
+Therefore ZiLOG decided to count only the lowest 7 bits. You can easily check
+that the R register is really crucial to memory refresh. Assemble this program:
+
+<!--mstheme--></font><pre>        ORG 32768
+        DI
+        LD B,0
+    L1: XOR A
+        LD R,A
+        DEC HL
+        LD A,H
+        OR L
+        JR NZ,L1
+        DJNZ L1
+        EI
+        RET
+</pre><!--mstheme--><font face="verdana">
+
+It will take about three minutes to run.  Look at the upper 32K of memory,
+for instance the UDG graphics.  It will have faded.  Only the first few bytes
+of each 256 byte block will still contain zeros, because they were refreshed
+during the execution of the loop. The ULA took care of the refreshing of the
+lower 16K (This example won't work on the emulator, of course!).
+
+<h2><!--mstheme--><font color="#003366">e) Undocumented flags:<!--mstheme--></font></h2>
+   This undocumented "feature" of Z80 has its effect on programs like Sabre
+Wulf, Ghosts'n Goblins and Speedlock. Bits 3 and 5 of the F register are not
+used. They can contain information, as you can readily figure out by PUSHing
+AF onto the stack and then POPping some it into another pair of registers.
+Furthermore, sometimes their values change. I found the following empirical
+rule:
+
+<!--msthemelist-->
+    The values of bits 7, 5 and 3 follow the values of the corresponding
+    bits of the last 8 bit result of an instruction that changed the usual
+    flags.
+<table border="0" cellpadding="0" cellspacing="0" width="100%"><!--msthemelist--></table>
+
+For instance, after an ADD A,B those bits will be identical to the bits of
+the A register (Bit 7 of F is the sign flag, and fits the rule exactly). An
+exception is the CP x instruction (x=register, (HL) or direct argument). In
+this case the bits are copied from the argument.
+If the instruction is one that operates on a 16 bit word, the 8 bits of the
+rule are the highest 8 bits of the 16 bit result - that was to be expected
+since the S flag is extracted from bit 15.
+Ghosts'n Goblins use the undocumented flag due to a programming error. The
+rhino in Sabre Wulf walks backward or keeps running in little circles in a
+corner, if the (in this case undocumented) behaviour of the sign flag in the
+BIT instruction isn't right. I quote:
+
+<!--mstheme--></font><pre>        AD86    DD CB 06 7E        BIT 7,(IX+6)
+        AD8A    F2 8F AD           JP P,#AD8F
+</pre><!--mstheme--><font face="verdana">
+
+An amazing piece of code!  Speedlock does so many weird things that all must
+be exactly right for it to run. Finally, the '128 ROM uses the AF register to
+hold the return address of a subroutine for a while.
+
+<h2><!--mstheme--><font color="#003366">f) Interrupt flip-flops IFF1 and IFF2:<!--mstheme--></font></h2>
+   There seems to be a little confusion about these. These flip flops are
+simultaneously set or reset by the EI and DI instructions. IFF1 determines
+whether interrupts are allowed, but its value cannot be read. The value of
+IFF2 is copied to the P/V flag by LD A,I and LD A,R. When an NMI occurs, IFF1
+is reset, thereby disallowing further [maskable] interrupts, but IFF2 is left
+unchanged. This enables the NMI service routine to check whether the
+interrupted program had enabled or disabled maskable interrupts. So, Spectrum
+snapshot software can only read IFF2, but most emulators will emulate both,
+and then the one that matters most is IFF1.
+
+</font></body></html>

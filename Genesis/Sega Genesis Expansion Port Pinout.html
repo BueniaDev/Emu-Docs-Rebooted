@@ -1,0 +1,145 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content</td><td>Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="Lawrence Wright">
+   <META NAME="Description" CONTENT="Cartridge pinout for Sega Master System">
+   <META NAME="KeyWords" CONTENT="cart, cartridge, eprom, rom, slot, port, pinout, schematic, schem, diagram, game, system, gen, genny, genesis, mega, drive, megadrive, tera, teradrive, sega">
+   <TITLE>Sega Genesis Expansion Port Pinout</TITLE>
+
+</HEAD>
+<BODY TEXT="#dddddd" BGCOLOR="#000000" LINK="#FFFF00" VLINK="#FF4444"><font face="arial">
+<A HREF="../index2.htm"><IMG SRC="../grafx/back.jpg" BORDER=0></A>
+
+<br>
+<br>
+
+<center>
+<table border="0" width="640" cellpadding="5">
+ <tr>
+  <td bgcolor="444477">
+	<center>
+	<font size="+1" color="ffffff">
+	Sega Genesis/MegaDrive Expansion Port Pinout
+	</font>
+	</center>
+  </td>
+ </tr>
+ <TR>
+	<TD bgcolor="447744">
+		<font color="ffffff">This pinout is took a while to complete.  As part of an effort to connect a Teradrive to a SegaCD unit, I had to trace the expansion port.  This is it.  Some pins are labelled by destination rather than signal, for example 87/315-5364.  This means it runs to pin 87 of the IC 315-5364.  Also, this refers only to the model 1 Genesis/MegaDrive.  There may be minor differences in the model 2, for example the audio in the 2 does not require the patchcord, so I assume there's a small difference there. 
+		<br><br>
+		Some of the pin names may sound a little odd, they're based on corresponding cartridge port pins.  The majority of the pins on the expansion port, for example the data and address lines, connect to the same pins on the cartridge port.  /C_OE is Cartridge Output Enable, which sounds a little odd on the expansion port, but I'm sure you'll adjust.  If you have any additional info on this or the model 2 differences, please <a href="mailto:carts@gamesx.com">email me</a>.  
+	</TD>
+  </tr>
+  <TR><TD><BR></TD></TR>
+  <tr>
+	<TD>
+		<center>
+<table><tr><td>
+<table>
+<tr><td width="40"><b>pin</b></td><td><b>Name</td></tr>
+<tr><td>A01</td><td>GND</td></tr>
+<tr><td>A02</td><td>NC</td></tr>
+<tr><td>A03</td><td>/C_OE</td></tr>
+<tr><td>A04</td><td>D00</td></tr>
+<tr><td>A05</td><td>D01</td></tr>
+<tr><td>A06</td><td>D02</td></tr>
+<tr><td>A07</td><td>D03</td></tr>
+<tr><td>A08</td><td>D04</td></tr>
+<tr><td>A09</td><td>D05</td></tr>
+<tr><td>A10</td><td>D06</td></tr>
+<tr><td>A11</td><td>D07</td></tr>
+<tr><td>A12</td><td>GND</td></tr>
+<tr><td>A13</td><td>D08</td></tr>
+<tr><td>A14</td><td>D09</td></tr>
+<tr><td>A15</td><td>D10</td></tr>
+<tr><td>A16</td><td>D11</td></tr>
+<tr><td>A17</td><td>D12</td></tr>
+<tr><td>A18</td><td>D13</td></tr>
+<tr><td>A19</td><td>D14</td></tr>
+<tr><td>A20</td><td>D15</td></tr>
+<tr><td>A21</td><td>87/315-5364</td></tr>
+<tr><td>A22</td><td>/LO_MEM</td></tr>
+<tr><td>A23</td><td>91/315-5364</td></tr>
+<tr><td>A24</td><td>86/315-5364</td></tr>
+<tr><td>A25</td><td>10/315-5309</td></tr>
+<tr><td>A26</td><td>+5v</td></tr>
+<tr><td>A27</td><td>NC</td></tr>
+<tr><td>A28</td><td>VCC IN*</td></tr>
+<tr><td>A29</td><td>Audio*</td></tr>
+<tr><td>A30</td><td>GND</td></tr>
+</table></td><td width="40"></td><td><table>
+<tr><td width="40"><b>pin</b></td><td><b>Name</td></tr>
+<tr><td>B01</td><td>GND</td></tr>
+<tr><td>B02</td><td>11/315-5309</td></tr>
+<tr><td>B03</td><td>A01</td></tr>
+<tr><td>B04</td><td>A02</td></tr>
+<tr><td>B05</td><td>A03</td></tr>
+<tr><td>B06</td><td>A04</td></tr>
+<tr><td>B07</td><td>A05</td></tr>
+<tr><td>B08</td><td>A06</td></tr>
+<tr><td>B09</td><td>A07</td></tr>
+<tr><td>B10</td><td>A08</td></tr>
+<tr><td>B11</td><td>A09</td></tr>
+<tr><td>B12</td><td>GND</td></tr>
+<tr><td>B13</td><td>A10</td></tr>
+<tr><td>B14</td><td>A11</td></tr>
+<tr><td>B15</td><td>A12</td></tr>
+<tr><td>B16</td><td>A13</td></tr>
+<tr><td>B17</td><td>A14</td></tr>
+<tr><td>B18</td><td>A15</td></tr>
+<tr><td>B19</td><td>A16</td></tr>
+<tr><td>B20</td><td>A17</td></tr>
+<tr><td>B21</td><td>/LDS</td></tr>
+<tr><td>B22</td><td>/UDSW</td></tr>
+<tr><td>B23</td><td>Cart B21*</td></tr>
+<tr><td>B24</td><td>85/315-5364</td></tr>
+<tr><td>B25</td><td>10/315-5309</td></tr>
+<tr><td>B26</td><td>+5v</td></tr>
+<tr><td>B27</td><td>NC</td></tr>
+<tr><td>B28</td><td>VCC IN*</td></tr>
+<tr><td>B29</td><td>Audio*</td></tr>
+<tr><td>B30</td><td>GND</td></tr>
+</table></td></tr>
+<tr><td colspan="3">
+	<br><br>
+	<b>* VCC IN</b> - It appears the SGCD is capable of
+	powering the main console through these pins.  Power
+	from them is routed directly to the console power switch
+	through a pair of diodes.<br>
+	<B>* Cart B21</b> - This pin connects to the cartridge slot B21, function unknown.<br>
+	<b>* Audio</b> - This is assumed functional, but is untested.
+</td></tr>
+</table>
+
+   </td>
+  </tr>
+</table>
+
+<br>
+
+<table width="640">
+ <tr>
+  <td>
+<BR>
+<HR><FONT COLOR="#FFFFFF"><FONT SIZE=-1>All contents (c)2003 GameSX.com unless otherwise noted. All trademarks copyright of their respective companies. GameSX.com assumes absolutely no responsiblility whatsoever for any sort of damages incurred while either viewing this information or doing anything with said information. If you don't like it, change the channel. Some of this information may have come from other sources, and GameSX.com in no way implies ownership of this information, and merely intends to provide a convenient source for finding this information. That said, we wrote this, and would appreciate your not lifting it for your own page without due credit.  <a href="mailto:disclaimer@gamesx.com">Mail us!</a>  I had, strangely, a great deal of fun writing this page.  Did you notice?<br>
+</font></FONT>
+  </td>
+ </tr>
+</table>
+
+<!-- Piwik -->
+<script type="text/javascript">
+var pkBaseURL = (("https:" == document.location.protocol) ? "https://nfgworld.com/system/stats/" : "http://nfgworld.com/system/stats/");
+document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
+</script><script type="text/javascript">
+try {
+var piwikTracker = Piwik.getTracker(pkBaseURL + "piwik.php", 6);
+piwikTracker.trackPageView();
+piwikTracker.enableLinkTracking();
+} catch( err ) {}
+</script><noscript><p><img src="http://nfgworld.com/system/stats/piwik.php?idsite=6" style="border:0" alt="" /></p></noscript>
+<!-- End Piwik Tag -->
+
+</body>
+</html>

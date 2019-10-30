@@ -1,0 +1,45 @@
+Gens Movie (GMV) File Format
+-------------------------------
+
+[[general description, purpose, origin]]
+
+
+Header
+------
+
+The file begins with a 40-byte header:
+
+64 bytes header:
+
+offset	size	name		description
+0	 16	magic		"Gens Movie TEST9"
+16	 4	rerecords	number of rerecords (little endian int)
+20	 4	[[???]]		[[describe]]
+24	 40	comment		[[describe]]
+
+
+Controller Data
+---------------
+
+The header is followed by the recorded controller inputs, 3 bytes per frame:
+
+offset	size	name		description
+0	1	P1		controller 1
+				bit 0: up
+				bit 1: down
+				bit 2: left
+				bit 3: right
+				bit 4: button a
+				bit 5: button b
+				bit 6: button c
+				bit 7: start
+1	1	P2		controller 2 (same layout as controller 1)
+2	1	PX		6-button pad info
+				bit 0: controller 1 button x
+				bit 1: controller 1 button y
+				bit 2: controller 1 button z
+				bit 3: controller 1 mode
+				bit 4: controller 2 button x
+				bit 5: controller 2 button y
+				bit 6: controller 2 button z
+				bit 7: controller 2 mode

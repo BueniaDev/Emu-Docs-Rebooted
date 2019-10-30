@@ -1,0 +1,291 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"  xmlns:fb="http://ogp.me/ns/fb#" xmlns:og="http://ogp.me/ns#" lang="en-US">
+
+<head profile="http://gmpg.org/xfn/11">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Building an Xbox 360 Emulator, part 4: Tools and Information &laquo; Various Oddities</title>
+<link rel="shortcut icon" href="http://www.noxa.org/blog/wp-content/themes/lightword/favicon.ico" />
+<link rel="pingback" href="http://www.noxa.org/blog/xmlrpc.php" />
+
+
+<link rel="alternate" type="application/rss+xml" title="Various Oddities &raquo; Feed" href="http://www.noxa.org/blog/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Various Oddities &raquo; Comments Feed" href="http://www.noxa.org/blog/comments/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Various Oddities &raquo; Building an Xbox 360 Emulator, part 4: Tools and Information Comments Feed" href="http://www.noxa.org/blog/2011/08/11/building-an-xbox-360-emulator-part-4-tools-and-information/feed/" />
+<link rel='stylesheet' id='lightword_stylesheet-css'  href='http://www.noxa.org/blog/wp-content/themes/lightword/style.css?ver=2.0.0.6' type='text/css' media='all' />
+<link rel='stylesheet' id='lightword_stylesheet_wider-css'  href='http://www.noxa.org/blog/wp-content/themes/lightword/wider.css?ver=2.0.0.6' type='text/css' media='all' />
+<script type='text/javascript' src='http://www.noxa.org/blog/wp-includes/js/comment-reply.min.js?ver=3.7.11'></script>
+<script type='text/javascript' src='http://www.noxa.org/blog/wp-includes/js/jquery/jquery.js?ver=1.10.2'></script>
+<script type='text/javascript' src='http://www.noxa.org/blog/wp-includes/js/jquery/jquery-migrate.min.js?ver=1.2.1'></script>
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://www.noxa.org/blog/xmlrpc.php?rsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://www.noxa.org/blog/wp-includes/wlwmanifest.xml" /> 
+<link rel='prev' title='Xenia Status' href='http://www.noxa.org/blog/2011/07/18/xenia-status/' />
+<link rel='next' title='Building an Xbox 360 Emulator, part 5: XEX Files' href='http://www.noxa.org/blog/2011/08/13/building-an-xbox-360-emulator-part-5-xex-files/' />
+<link rel='canonical' href='http://www.noxa.org/blog/2011/08/11/building-an-xbox-360-emulator-part-4-tools-and-information/' />
+<link rel='shortlink' href='http://www.noxa.org/blog/?p=161' />
+<meta property='og:type' content='article' />
+<meta property='og:title' content='Building an Xbox 360 Emulator, part 4: Tools and Information' />
+<meta property='og:url' content='http://www.noxa.org/blog/2011/08/11/building-an-xbox-360-emulator-part-4-tools-and-information/' />
+<meta property='og:description' content='Before going much further I figured it&#039;d be useful to document the setup I&#039;ve been using to do my reversing. It should make it easier to follow along, and if I forget myself I&#039;ve got a good reference. Note that I&#039;m going off of publicly searchable information here - everything I&#039;ve been doing is sourced from Google (and surprisingly sometimes Bing, which ironically indexes certain 360 hacking related information better than Google does!). I&#039;ll try to update this list if I find anything interesting. Primary Sources Various Internet Searches There&#039;s a wealth of information out there on the interwebs, although it&#039;s sometimes hard to find. Google around for these and you&#039;ll find interesting things... Most of the APIs I&#039;ve been researching turn up hits on pastebin, providing snippets of sample code from hackers and what I assume to be legit developers. None of it is tagged or labeled, but the API names are unique enough to find exactly the right information. Most [...]' />
+<meta property='og:site_name' content='Various Oddities' />
+<meta property='fb:app_id' content='183814088327609' />
+<meta property='og:locale' content='en_US' />
+<style type="text/css">
+#content-body,x:-moz-any-link{float:left;margin-right:28px;}#content-body, x:-moz-any-link, x:default{float:none;margin-right:25px;} 
+</style>
+
+<script src="http://www.noxa.org/blog/wp-content/themes/lightword/js/cufon-yui.js" type="text/javascript"></script>
+<script src="http://www.noxa.org/blog/wp-content/themes/lightword/js/vera.font.js" type="text/javascript"></script>
+<script type="text/javascript">/*<![CDATA[*/Cufon.replace(['h1','h2','h3#reply-title'], { fontFamily: 'Vera' });/*]]>*/</script>
+<!--[if IE 6]><style type="text/css">#header{background-image: none; filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='http://www.noxa.org/blog/wp-content/themes/lightword/images/wider/content_top.png',sizingMethod='scale'); }#footer{background:transparent url(http://www.noxa.org/blog/wp-content/themes/lightword/images/wider/content_bottom.gif) no-repeat;height:8px;}.comm_date{background-image: none; filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='http://www.noxa.org/blog/wp-content/themes/lightword/images/date_comm_box.png',sizingMethod='scale'); }</style><![endif]-->
+</head>
+
+<body class="single single-post postid-161 single-format-standard">
+<div id="wrapper">
+
+<div id="top_cufon"><h1 id="logo"><a name="top" title="Various Oddities" href="http://www.noxa.org/blog">Various Oddities</a> <small>Graphics, Game Dev, Emulators, and other geeky stuff</small></h1></div>
+
+<div id="header">
+<a id="rss-feed" title="Syndicate this site using RSS" href="http://www.noxa.org/blog/feed/">Subscribe via RSS</a>
+
+<div id="top_bar">
+<div class="center_menu">
+<ul id="front_menu" >
+    <li><a class="" title="Home" href="http://www.noxa.org/blog"><span>Home</span></a></li>
+<li id="menu-item-100" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-100"><a href="http://benvanik.github.com/WebGL-Inspector/"><span>WebGL Inspector</span></a></li>
+<li id="menu-item-90" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-90"><a title="github profile" href="https://github.com/benvanik/"><span>github</span></a></li>
+<li id="menu-item-91" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-91"><a href="http://www.noxa.org"><span>Website</span></a></li>
+<li id="menu-item-89" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-89"><a href="http://www.noxa.org/blog/about-2/"><span>About</span></a></li></ul>
+</div>
+<form method="get" id="searchform" action="http://www.noxa.org/blog"> <input type="text" value="" name="s" id="s" /> <input type="submit" id="go" value="" alt="Search" title="Search" /></form>
+</div>
+
+</div>
+<div id="content"><div id="content-body">
+<div class="post-161 post type-post status-publish format-standard hentry category-coding category-emulation category-projects category-xenia tag-emulation tag-xbox360" id="post-161">
+<div class="comm_date"><span class="data"><span class="j">11</span>Aug/11</span><span class="nr_comm"><a class="nr_comm_spot" href="http://www.noxa.org/blog/2011/08/11/building-an-xbox-360-emulator-part-4-tools-and-information/#comments">1</a></span></div>
+<h2><a title="Building an Xbox 360 Emulator, part 4: Tools and Information" href="http://www.noxa.org/blog/2011/08/11/building-an-xbox-360-emulator-part-4-tools-and-information/" rel="bookmark">Building an Xbox 360 Emulator, part 4: Tools and Information</a></h2>
+<p>Before going much further I figured it&#8217;d be useful to document the setup I&#8217;ve been using to do my reversing. It should make it easier to follow along, and if I forget myself I&#8217;ve got a good reference. Note that I&#8217;m going off of publicly searchable information here &#8211; everything I&#8217;ve been doing is sourced from Google (and surprisingly sometimes Bing, which ironically indexes certain 360 hacking related information better than Google does!).</p>
+<p>I&#8217;ll try to update this list if I find anything interesting.</p>
+<h2>Primary Sources</h2>
+<h3>Various Internet Searches</h3>
+<p>There&#8217;s a wealth of information out there on the interwebs, although it&#8217;s sometimes hard to find. Google around for these and you&#8217;ll find interesting things&#8230;</p>
+<p>Most of the APIs I&#8217;ve been researching turn up hits on pastebin, providing snippets of sample code from hackers and what I assume to be legit developers. None of it is tagged or labeled, but the API names are unique enough to find exactly the right information. Most of the method signatures and usage information I&#8217;ve gathered so far have come from sources like this.</p>
+<p>PowerPC references:</p>
+<ul>
+<li>Altivec_PEM.pdf / AltiVec Technology Programming Environments Manual</li>
+<li>MPCFPE_AD_R1.pdf / PowerPC Microprocessor Family: The Programming Environments</li>
+<li>pem_64bit_v3.0.2005jul15.pdf / PowerPC Microprocessor Family: The Programming Environments Manual for 64-bit Microprocessors</li>
+<li>PowerISA_V2.06B_V2_PUBLIC.pdf / Power ISA Version 2.06 Revision B</li>
+<li>vector_simd_pem_v_2.07c_26Oct2006_cell.pdf / PowerPC Microprocessor Family: Vector/SIMD Multimedia Extension Technology Programming Environments Manual</li>
+<li><a href="http://biallas.net/doc/vmx128/vmx128.txt" target="_blank">vmx128.txt</a></li>
+</ul>
+<div>GPU references:</div>
+<div>
+<ul>
+<li>R700-Family_Instruction_Set_Architecture.pdf / ATI R700-Family Instruction Set Architecture</li>
+<li>ParticleSystemSimulationAndRenderingOnTheXbox360GPU.pdf / interesting bits about memexport</li>
+</ul>
+</div>
+<div>Xbox 360 specific:</div>
+<div>
+<ul>
+<li>xbox360-file-reference.pdf / Xbox 360 File Specifications Reference</li>
+</ul>
+</div>
+<h3><a href="http://free60.org" target="_blank">Free60</a></h3>
+<ul>
+<li><a href="http://free60.org/Xenon_(CPU)" target="_blank">Xenon (CPU)</a> &amp; <a href="http://free60.org/Xenos_(GPU)" target="_blank">Xenos (GPU)</a></li>
+<li><a href="http://free60.org/Starting_Homebrew_Development" target="_blank">Starting Homebrew Development</a> (toolchain setup, LibXenon, etc)</li>
+<li><a href="http://free60.org/XEX" target="_blank">XEX</a> file format documentation</li>
+</ul>
+<p>The <a href="http://free60.org" target="_blank">Free60</a> project is probably the best source of information I&#8217;ve found. The awesome hackers there have reversed quite a bit of the system for the commendable purpose of running Linux/homebrew, and have got a robust enough toolchain to compile simple applications.</p>
+<p>I haven&#8217;t taken the time to mod and setup their stack on one of my 360&#8242;s, but for the purpose of reversing and building an emulator it&#8217;s invaluable to have documentation-through-code and the ability to generate my own executables that are far simpler than any real game. If not for the hard work of the <a href="http://forums.ps2dev.org/viewforum.php?f=14" target="_blank">ps2dev community</a> I never would have been able to do my PSP emulator.</p>
+<h3>Microsoft</h3>
+<p>There&#8217;s quite a bit of information out there if you know where to look and what to look for. Although not all specific to the 360, a lot of the details carry over.</p>
+<h4><a href="http://research.microsoft.com/en-us/um/redmond/projects/invisible/" target="_blank">mmlite</a></h4>
+<p>Microsoft Invisible Computing is a project that has quite a bit of code in it that provides a small RTOS for embedded systems. What makes it interesting (and how I found it) is that it contains several files enabling support for PowerPC architectures. It appears as though the code that ended up in here came from either the same place the Xbox team got their code from, or is even the origin of some of the Xbox toolchain code.</p>
+<p>Specifically, the src/crt/md/ppc/xxx.s file has the __savegpr/__restgpr magic that tools like XexTool patch in to IDA dumps. Instead of guessing what all those tiny functions do it&#8217;s now possible to see the commented code and how it&#8217;s used. I&#8217;m sure there&#8217;s more interesting stuff in here too (possibly related to the CRT), but I haven&#8217;t had the need for it yet.</p>
+<h4><a href="http://msdn.microsoft.com/en-us/library/ff552927(v=VS.85).aspx" target="_blank">DDI API</a></h4>
+<p>A complete listing of all Direct3D9 API calls down to driver mode, with all of the arguments to them. The user-mode D3D implementation on Windows provided by Microsoft calls down into this layer to pass on commands to the driver. On the 360, this API (minus all the fixed function calls) <strong>is</strong> the command buffer format! Although the exact command opcodes are not documented here, there&#8217;s enough information (combined with tmbinc&#8217;s code below) to ensure a somewhat-proper initial implementation.</p>
+<h4><a href="http://msdn.microsoft.com/en-us/library/ff552891(v=VS.85).aspx" target="_blank">Direct3D Shader Codes</a></h4>
+<p>The details of the compiled HLSL bytecode are all laid out in the Windows Driver Kit. Minus some of the Xenos-specific opcodes, it&#8217;s all here. This should make the shader translation code much easier to write.</p>
+<h4><a href="http://msdn.microsoft.com/en-us/directx/aa937788" target="_blank">DirectX Effect Compiler</a></h4>
+<p>By using the command line effect compiler (fxc.exe) it is possible to both assemble and disassemble HLSL for the Xenos &#8211; with some caveats. After rummaging through some games I was able to get a few compiled shaders and by munging their headers get the standard fxc to dump their contents (as most shaders are just vs_3_0 and ps_3_0).</p>
+<p>The effect compiler in XNA Game Studio does not include the disassembler, but does support direct output of HLSL to binaries the Xenos can run. This tool, combined with the shader opcode information, should be plenty to get simple shaders going.</p>
+<h3><a href="http://debugmo.de/2008/03/xbox-360-gpu-update/" target="_blank">tmbinc&#8217;s gpu code</a> / &#8216;gpu-0.0.5.tar.gz&#8217;</h3>
+<p>Absolutely incredible piece of reversing here, amounting to the construction of an almost complete API for the Xenos GPU. Even includes information about how the Xbox-specific vfetch instruction is implemented. When it comes to processing the command buffers, this code will be critical to quickly getting things normalized.</p>
+<h3><a href="http://www.caustik.com/cxbx/" target="_blank">Cxbx</a></h3>
+<p>Once thought to be a myth, Cxbx is an Xbox 1 emulator capable of running retail games. A very impressive piece of work, its code provides insights into the 360 by way of the Xbox 1 having a very similar NT-like kernel. Although Cxbx had an easier life by virtue of being able to serve as mainly a runtime library and patching system (most of the x86 code is left untouched), the details of a lot of the NT-like APIs are very interesting. Through some research it seems like a lot have changed between the Xbox 1 and the 360 (almost enough so to make me believe there was a complete rewrite in-between), some of the finer differences between things like security handles and such should be consistent.</p>
+<h3><a href="http://abgx360.net/" target="_blank">abgx360</a></h3>
+<p>Although it may be some of the worst C I&#8217;ve ever seen, the raw amount of information contained within is mind boggling &#8211; everything one needs to read discs and most of the files on those discs (and the meanings of all of the data) reside within the single-file, 860KB, 16000 line code.</p>
+<h3><a href="http://hitmen.c02.at/html/xbox360_releases.html" target="_blank">xextool</a> (xor37h/Hitmen)</h3>
+<p>There are many &#8216;xextool&#8217;s out there, but this version written way back in 2006 is one of the few that does the full end-to-end XEX decryption and has source available. Having not been updated in half a decade (and having never been fully developed), it cannot decode modern XEX files but does have a lot of what abgx360 does in a much easier-to-read form.</p>
+<h3><a href="http://forums.xbox-scene.com/index.php?showtopic=642051" target="_blank">XexTool</a> (xorloser)</h3>
+<p>The best &#8216;xextool&#8217; out there, this command line app does quite a bit. For my purposes it&#8217;s interesting because it allows the dumping of the inner executable from XEX files along with a .idc file that IDA can use to resolve import names. By using this it&#8217;s possible to get a pretty decent view of files in IDA and makes reversing much easier. Unfortunately (for me), xorloser has never released the code and it sounds like he never will.</p>
+<h3><a href="http://forums.xbox-scene.com/index.php?showtopic=642051" target="_blank">PPCAltivec IDA plugin</a> (xorloser)</h3>
+<p>Another tool released by xorloser (originally from Dean Ashton), this IDA plugin adds support for all of the Altivec/VMX instructions used by the 360 (and various other PPC based consoles). Required when looking at real code, and when going to implement the decoder for these instructions the source (included) will prove invaluable, as most of the opcodes are undocumented.</p>
+<div class="plus-one-wrap"><g:plusone size="medium" href="http://www.noxa.org/blog/2011/08/11/building-an-xbox-360-emulator-part-4-tools-and-information/"></g:plusone></div>
+
+
+
+<div class="cat_tags clear">
+<span class="category">Tagged as: <a href="http://www.noxa.org/blog/tag/emulation/" rel="tag">Emulation</a>, <a href="http://www.noxa.org/blog/tag/xbox360/" rel="tag">Xbox 360</a></span>
+<span class="continue"><a class="nr_comm_spot" href="http://www.noxa.org/blog/2011/08/11/building-an-xbox-360-emulator-part-4-tools-and-information/#respond">Leave a comment</a></span><div class="clear"></div>
+</div>
+<div class="cat_tags_close"></div>
+
+<div style="float: left; margin: 0px 0px 0px 0px;">
+<a href="http://twitter.com/share?url=&via=benvanik&text=&related=:&lang=en&count=horizontal" class="twitter-share-button">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script></div>
+<div style="float: left; margin: 0px 0px 0px 0px;">
+<div class="plus-one-wrap"><g:plusone size="medium" href="http://www.noxa.org/blog/2011/08/11/building-an-xbox-360-emulator-part-4-tools-and-information/"></g:plusone></div></div>
+<div style="float: left; margin: -6px 0px 0px 15px;">
+</div>
+
+</div>
+
+
+
+<div id="tabsContainer">
+<a href="#" class="tabs selected"><span>Comments (1)</span></a>
+<a href="#" class="tabs"><span>Trackbacks (0)</span></a>
+<span class="subscribe_comments"><a href='http://www.noxa.org/blog/2011/08/11/building-an-xbox-360-emulator-part-4-tools-and-information/feed/'>( subscribe to comments on this post )</a></span>
+<div class="clear_tab"></div>
+<div class="tab-content selected">
+<a name="comments"></a>
+
+<div id="comentarii">
+<ol class="commentlist">
+<li class="comment even thread-even depth-1" id="li-comment-4478"><div id="comment-4478">
+<div class="comment_content"><div class="comment-meta commentmetadata"><div class="alignleft avatar"><img alt='' src='http://1.gravatar.com/avatar/79d0dcb2991fd0c4bc7792111120a55e?s=36&amp;d=http%3A%2F%2F1.gravatar.com%2Favatar%2Fad516503a11cd5ca435acc9bb6523536%3Fs%3D36&amp;r=PG' class='avatar avatar-36 photo' height='36' width='36' /></div>
+<div class="alignleft" style="padding-top:5px;"><strong class="comment_author">Blackbird</strong><br/><a href="#comment-4478" title="">August 11th, 2011 - 18:16</a></div><div class="clear"></div></div>
+<p>Amazing research right there.</p>
+<div class="reply"></div>
+</div><div class="clear"></div></div>
+</li><!-- #comment-## -->
+</ol>
+
+</div>
+
+
+ 
+<br/>
+
+								<div id="respond" class="comment-respond">
+				<h3 id="reply-title" class="comment-reply-title">Leave a comment <small><a rel="nofollow" id="cancel-comment-reply-link" href="/blog/2011/08/11/building-an-xbox-360-emulator-part-4-tools-and-information/#respond" style="display:none;">Cancel reply</a></small></h3>
+									<form action="http://www.noxa.org/blog/wp-comments-post.php" method="post" id="commentform" class="comment-form">
+																										<p class="comment-form-author"><input id="author" name="author" type="text" value="" size="30" aria-required='true' /><label for="author">Name <span class="required">(required)</span></label></p>
+<p class="comment-form-email"><input id="email" name="email" type="text" value="" size="30" aria-required='true' /><label for="email">Email <span class="required">(required)</span></label></p>
+<p class="comment-form-url"><input id="url" name="url" type="text" value="" size="30" /><label for="url">Website</label></p>
+												<p class="comment-form-comment"><textarea id="comment" name="comment" cols="45" rows="8" aria-required="true"></textarea></p>												<p class="form-submit">
+							<input name="submit" type="submit" id="submit" value="Submit" />
+							<input type='hidden' name='comment_post_ID' value='161' id='comment_post_ID' />
+<input type='hidden' name='comment_parent' id='comment_parent' value='0' />
+						</p>
+						<p style="display: none;"><input type="hidden" id="akismet_comment_nonce" name="akismet_comment_nonce" value="1d7b91541c" /></p>					</form>
+							</div><!-- #respond -->
+			
+
+</div>
+
+<div class="tab-content">
+<p class="no">No trackbacks yet.</p></div>
+</div>
+<div class="next_previous_links">
+<span class="alignleft"><a href="http://www.noxa.org/blog/2011/08/13/building-an-xbox-360-emulator-part-5-xex-files/" rel="next">Building an Xbox 360 Emulator, part 5: XEX Files</a> &raquo;</span>
+<span class="alignright">&laquo; <a href="http://www.noxa.org/blog/2011/07/18/xenia-status/" rel="prev">Xenia Status</a></span>
+<div class="clear"></div>
+
+</div>
+</div>
+<div class="content-sidebar">
+<a href="http://twitter.com/benvanik" ><img src="http://www.noxa.org/blog/wp-content/plugins/social-profiles-widget/images/default/Twitter_48x48.png" alt="Twitter" /></a><a href="http://www.facebook.com/benvanik" ><img src="http://www.noxa.org/blog/wp-content/plugins/social-profiles-widget/images/default/Facebook_48x48.png" alt="Facebook" /></a><a href="http://www.linkedin.com/in/benvanik" ><img src="http://www.noxa.org/blog/wp-content/plugins/social-profiles-widget/images/default/Linkedin_48x48.png" alt="Linkedin" /></a><h3>Categories</h3>		<ul>
+	<li class="cat-item cat-item-3"><a href="http://www.noxa.org/blog/category/coding/" title="Random coding bits about C#, .NET, or progamming in general">Coding</a> (16)
+<ul class='children'>
+	<li class="cat-item cat-item-4"><a href="http://www.noxa.org/blog/category/coding/emulation/" title="Adventures in emulation">Emulation</a> (9)
+</li>
+	<li class="cat-item cat-item-10"><a href="http://www.noxa.org/blog/category/coding/graphics/" title="View all posts filed under Graphics">Graphics</a> (5)
+</li>
+	<li class="cat-item cat-item-5"><a href="http://www.noxa.org/blog/category/coding/system-hacks/" title="View all posts filed under System Hacks">System Hacks</a> (1)
+</li>
+	<li class="cat-item cat-item-11"><a href="http://www.noxa.org/blog/category/coding/web/" title="View all posts filed under Web">Web</a> (6)
+</li>
+</ul>
+</li>
+	<li class="cat-item cat-item-17"><a href="http://www.noxa.org/blog/category/projects/" title="View all posts filed under Projects">Projects</a> (14)
+<ul class='children'>
+	<li class="cat-item cat-item-14"><a href="http://www.noxa.org/blog/category/projects/hiranipra/" title="View all posts filed under Hiranipra">Hiranipra</a> (4)
+</li>
+	<li class="cat-item cat-item-26"><a href="http://www.noxa.org/blog/category/projects/xenia/" title="View all posts filed under Xenia">Xenia</a> (9)
+</li>
+</ul>
+</li>
+		</ul>
+<h3>Tags</h3><div class="tagcloud"><a href='http://www.noxa.org/blog/tag/emulation/' class='tag-link-4' title='9 topics' style='font-size: 22pt;'>Emulation</a>
+<a href='http://www.noxa.org/blog/tag/graphics/' class='tag-link-10' title='5 topics' style='font-size: 8pt;'>Graphics</a>
+<a href='http://www.noxa.org/blog/tag/html5/' class='tag-link-12' title='5 topics' style='font-size: 8pt;'>HTML5</a>
+<a href='http://www.noxa.org/blog/tag/javascript/' class='tag-link-13' title='5 topics' style='font-size: 8pt;'>Javascript</a>
+<a href='http://www.noxa.org/blog/tag/webgl/' class='tag-link-19' title='5 topics' style='font-size: 8pt;'>WebGL</a>
+<a href='http://www.noxa.org/blog/tag/xbox360/' class='tag-link-25' title='9 topics' style='font-size: 22pt;'>Xbox 360</a></div>
+				<h3>Recent Posts</h3>		<ul>
+					<li>
+				<a href="http://www.noxa.org/blog/2011/08/21/building-an-xbox-360-emulator-part-6-code-translation-techniques/">Building an Xbox 360 Emulator, part 6: Code Translation Techniques</a>
+						</li>
+					<li>
+				<a href="http://www.noxa.org/blog/2011/08/21/emulation-books/">Emulation Books</a>
+						</li>
+					<li>
+				<a href="http://www.noxa.org/blog/2011/08/13/building-an-xbox-360-emulator-part-5-xex-files/">Building an Xbox 360 Emulator, part 5: XEX Files</a>
+						</li>
+					<li>
+				<a href="http://www.noxa.org/blog/2011/08/11/building-an-xbox-360-emulator-part-4-tools-and-information/">Building an Xbox 360 Emulator, part 4: Tools and Information</a>
+						</li>
+					<li>
+				<a href="http://www.noxa.org/blog/2011/07/18/xenia-status/">Xenia Status</a>
+						</li>
+				</ul>
+		<h3>Archives</h3>		<ul>
+			<li><a href='http://www.noxa.org/blog/2011/08/'>August 2011</a>&nbsp;(4)</li>
+	<li><a href='http://www.noxa.org/blog/2011/07/'>July 2011</a>&nbsp;(1)</li>
+	<li><a href='http://www.noxa.org/blog/2011/02/'>February 2011</a>&nbsp;(5)</li>
+	<li><a href='http://www.noxa.org/blog/2010/01/'>January 2010</a>&nbsp;(2)</li>
+	<li><a href='http://www.noxa.org/blog/2009/11/'>November 2009</a>&nbsp;(4)</li>
+	<li><a href='http://www.noxa.org/blog/2008/02/'>February 2008</a>&nbsp;(1)</li>
+		</ul>
+</div><div class="clear"></div>
+</div>
+<div id="footer">
+<span class="text">
+Copyright &copy; 2015 <a href="http://www.noxa.org/blog">Various Oddities</a> &middot; Powered by <a href="http://www.wordpress.org" title="WordPress" target="_blank">WordPress</a> <br/></em>
+<a title="Go to top" class="top" href="#top">Go to top &uarr;</a>
+</span>
+</div>
+<script type="text/javascript" src="http://www.noxa.org/blog/wp-content/themes/lightword/js/menu.js"></script>
+</div>
+
+<script type="text/javascript">/* <![CDATA[ */ Cufon.now(); /* ]]> */ </script>
+<script type="text/javascript" src="http://www.noxa.org/blog/wp-content/themes/lightword/js/tabs.js"></script>
+<script type="text/javascript">jQuery(document).ready(function(){jQuery('tabs').lightword_tabs({linkClass : 'tabs',containerClass : 'tab-content',linkSelectedClass : 'selected',containerSelectedClass : 'selected',onComplete : function(){}});});</script>
+
+
+<!-- Google +1 Button for WordPress -->
+<script type="text/javascript" src="http://apis.google.com/js/plusone.js"></script>
+
+<div id="fb-root"></div>
+<script type="text/javascript">
+  window.fbAsyncInit = function() {
+    FB.init({"appId":"183814088327609","channelUrl":"http:\/\/www.noxa.org\/blog\/?sfc-channel-file=1","status":true,"cookie":true,"xfbml":true,"oauth":true});
+      };
+  (function(d){
+       var js, id = 'facebook-jssdk'; if (d.getElementById(id)) {return;}
+       js = d.createElement('script'); js.id = id; js.async = true;
+       js.src = "//connect.facebook.net/en_US/all.js";
+       d.getElementsByTagName('head')[0].appendChild(js);
+   }(document));     
+</script>
+</body>
+</html>
+<!-- Performance optimized by W3 Total Cache. Learn more: http://www.w3-edge.com/wordpress-plugins/
+
+ Served from: www.noxa.org @ 2015-10-31 19:02:23 by W3 Total Cache -->

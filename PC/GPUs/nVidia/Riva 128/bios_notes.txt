@@ -1,0 +1,8 @@
+Most emulators have a hack to force VGA reg 3c2h bit 4 to always be 1. This
+breaks the RIVA 128 BIOS, which fills the screen with red and expects this
+bit to eventually be 0. If it isn't, it beeps and hangs until it is. PCem
+currently handles this with a hack that needs to be adjusted for this BIOS.
+
+if ((svga->vgapal[0].r + svga->vgapal[0].g + svga->vgapal[0].b) >= 0x50)
+
+To work for the RIVA 128 BIOS, it has to be 0x4e instead of 0x50.

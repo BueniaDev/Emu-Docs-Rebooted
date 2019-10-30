@@ -1,0 +1,284 @@
+MC68000/HC000/008/010 FAQ
+
+
+
+QUESTION
+Is it okay to tie the HALT* and RESET* lines together on the MC68000 
+together?
+
+
+ANSWER
+Tying HALT* and RESET* together will not cause any problems for the 
+MC68000.As you probably know, RESET* on the MC68000 should never be 
+asserted without asserting HALT* as well. You must realize, however, that 
+tying the two lines together introduces the following three restrictions:
+1) You can not do hardware single-stepping of the processor.
+2) You can not perform a retry.
+3) The processor will reset itself if you get a double bus error (by 
+asserting HALT*).
+
+Many systems can function within the bounds of the above restrictions and 
+operate without problems when HALT* and RESET* are tied together.
+
+
+
+QUESTION
+Should I assert RESET* on the MC68000 without asserting HALT* as well?
+
+
+ANSWER
+On the MC68000/MC68EC000/MC68008 processors, RESET* should never be 
+asserted without asserting HALT* as well. You may bring about the assertion 
+of HALT* with RESET* through external logic or by tying the two lines 
+together. You must realize, however, that tying the two lines together 
+introduces the following three restrictions:
+1) You can not do hardware single-stepping of the processor.
+2) You cannot perform a retry.
+3) The processor will reset itself if you get a double bus error (by 
+asserting   HALT*).
+
+
+
+QUESTION
+Is it okay to assert the MC68000 VPA* and DTACK* inputs at the same time?
+
+
+ANSWER
+DTACK* should never be asserted while VPA* is asserted. Asserting DTACK* 
+and VPA* at the same time will produce unpredictable results.
+
+
+
+QUESTION
+Will the MC68000 support 4 megabytes of DRAM using 1x9 1-Mbyte SIMMs?
+
+
+ANSWER
+You should have no problems interfacing standard DRAM SIMMs to the 
+MC68000.Note that the MC68000 does not burst so you do not need any special 
+type of DRAM such as page-mode DRAM which would normally be required to 
+support bursting.
+
+
+
+QUESTION
+What kind of cache design would you recommend for the MC68000?
+
+
+ANSWER
+A system can be designed around an MC68000 which uses relatively cheap (80 
+ns or 100 ns) DRAM and yet provides zero wait-state accesses. Therefore, we 
+do not recommend using a cache with the MC68000.
+
+
+
+QUESTION
+How do you perform a long-word write with an MC68000 with a 16-bit bus?
+
+
+ANSWER
+The MC68000 instruction set supports long-word moves. When the processor 
+executes an instruction that calls for a long-word write, it will perform 
+two 16-bit writes. Note that bus arbitration is done on a cycle-by-cycle 
+basis, so the bus can be arbitrated away from the MC68000 after the first 
+of the two 16-bit writes, and the processor will complete the long-word 
+write after it retakes the bus.
+
+
+
+QUESTION
+What is the difference between an MC68000 and an MC68008?
+
+
+ANSWER
+1) The MC68000 is a 16-bit processor, whereas the MC68008 is an 8-bit 
+processor.
+2) Therefore, UDS* and LDS* on the MC68000 are replaced by DS* and A0 on 
+the MC68008.
+3) The MC68008 uses two-wire bus arbitration, whereas the MC68000 uses 
+three-wire bus arbitration.
+4) The MC68000 supports three interrupt lines and, therefore, seven 
+interrupt levels. The MC68008 supports only two interrupt lines and, 
+therefore, three interrupt levels. The MC68008 PLCC package supports three 
+interrupt lines like the MC68000.
+5) The MC68000 provides 16 Mbytes of addressable space. The MC68008 has 20 
+address lines creating 1 Mbyte of addressable space. The MC68008 PLCC 
+package has 21 address lines for 2 Mbytes of addressable space.
+6) The MC68008 does not have a VMA* signal as does the MC68000, but this 
+signal can be generated with some simple external logic (see M68000 Users 
+Manual (M68000UM/AD)).
+7) The MC68000 and MC68008 are not pin compatible.
+
+It should be noted that the MC68EC000 provides a lower cost solution 
+compared to the MC68008 and is available at more frequencies than the 
+MC68008. The MC68EC000 can operate in either 8-bit or 16-bit mode and does 
+not include the 6800 peripheral interface, but is virtually identical to 
+the MC68000 in every other way. If you are planning to do a design with the 
+MC68008, it would be worth your time to consider the option of using the 
+MC68EC000 instead.
+
+
+
+QUESTION
+During a byte access on the MC68000, which bits of the data bus are 
+read/written?
+
+
+ANSWER
+If the MC68000 asserts UDS*, then bits 15-8 of the data bus will be used. 
+If the MC68000 asserts LDS*, then bits 7-0 of the data bus will be used.
+
+
+
+QUESTION
+The MC68230 is an 8-bit peripheral. On which byte lane of the MC68000 
+should I place the MC68230?
+
+
+ANSWER
+The MC68230 should be placed on the lower byte lane (i.e., on data bits 7-
+0) of the MC68000. This is required because when the MC68230 provides an 
+interrupt vector for the MC68000 it must be right-aligned. In all other 
+respects, the two byte lanes of the MC68000 would be equally qualified for 
+attaching the MC68230. Note that your software must be written so that all 
+accesses to the MC68230 are byte accesses to even addresses to make sure 
+the proper byte lane (bits 7-0) of the MC68000 are used.
+
+
+
+QUESTION
+What is the state of AS* during reset on the MC68000 and how long after 
+reset before AS* becomes valid?
+
+
+ANSWER
+AS* remains inactive during reset. It will take an undetermined amount of 
+time after reset before AS* will become valid. However, if you are not 
+getting an AS* after you come out of reset, you should check the following 
+signals:
+1) Check to make sure BR* and BGACK* are negated to make sure you are not 
+arbitrating the bus away from the MC68000.
+2) Check to make sure HALT* is negated.
+
+
+
+QUESTION
+Intel has a pin that allows the signals to tri-state. Does the MC68000 have 
+something similar?
+
+
+ANSWER
+Motorola does not provide such a pin. However, if you want to cause the 
+signals from the MC68000 to tri-state, you can arbitrate the bus away from 
+the MC68000 which will cause it to tri-state all signals with the exception 
+of the bus arbitration signals.
+
+
+
+QUESTION
+In an MC68000 system, we desire that all registers of an 8-bit peripheral 
+be mapped on byte boundaries. How can we do this?
+
+
+ANSWER
+Essentially, what is needed is pseudo-"dynamic bus sizing." This feature is 
+implemented on the MC68020 and MC68030, but not on the MC68000. There is no 
+glueless way of implementing dynamic bus sizing on the MC68000. The 
+cheapest solution is to place the peripheral on one of the byte lanes and 
+use the MOVEP instruction. The UDS/LDS signals will uniquely determine the 
+byte of the data bus.
+
+
+
+QUESTION
+What is the interrupt latency for the MC68000 family?
+
+
+ANSWER
+Interrupt latency is the time from when an interrupt occurs to when the 
+first instruction of the interrupt handler is started. The amount of time 
+required for this will depend the processor, what the processor is doing 
+when the interrupt occurs, and the speed with which the memory responds to 
+reads and writes.
+
+Worst case interrupt latency is the absolute maximum amount of time it will 
+take for the processor to respond to the interrupt for a given set of 
+conditions. A given interrupt may respond sooner (and usually will), but it 
+will never take longer. The selection of the conditions can have a major 
+impact on the interrupt latency. For example, the number of wait states on 
+writes will effect the time it takes to stack the interrupt stack frame. An 
+infinite number of wait states on writes would result in an infinite 
+interrupt latency.
+
+The following lists the interrupt latency for a given processor and the 
+conditions assumed.
+
+MPU           Conditions                                     Latency
+MC68EC000     MOVEM.L xxx.L,D0-D7/A0-A7
+16-bit        DIVS xxx.L, Dn
+data bus      interrupt at beginning of MOVEM                378 
+clks
+
+MC68EC000     MOVEM.L xxx.L,D0-D7/A0-A7
+8-bit         DIVS xxx.L, Dn
+data bus      interrupt at beginning of MOVEM                574 
+clks
+
+MC68EC020     MOVEM.L <memory indirect ea>,D0-D7/A0-A7
+MC68EC030     interrupt at the beginning of MOVEM            197 
+clks
+32-bit bus    no bus errors
+
+MC68EC040     any integer instruction stream,
+              no back-to back 64-bit divide instructions
+              no CAS,TAS,CAS2 instructions                    78 
+clks
+
+
+
+QUESTION
+How many transistors are on each of the MC68000 family devices?
+
+
+ANSWER
+DEVICE          TRANSISTORS
+
+MC68000           68,000
+MC68EC000         68,000
+MC68HC000         68,000
+MC68HC001         68,000
+MC68008           70,000
+MC68010           84,000
+MC68020          190,000
+MC68EC020        190,000
+MC68030          273,000
+MC68EC030        251,000
+MC68040        1,170,000
+MC68EC040        962,000
+MC68LC040        813,500
+MC68230           16,700
+MC68302          320,000
+MC68330          235,000
+MC68340          350,000
+MC68440           26,000
+MC68450           40,000
+MC68451           34,000
+MC68661            6,000
+MC68681            9,743
+MC68851          210,000
+MC68881          155,000
+MC68882          176,000
+MC68901            9,100
+
+
+QUESTION
+If BR* is asserted before RESET* negates, when will the MC68HC000 take 
+control of the bus?
+
+
+ANSWER
+If BR* is asserted when the MC68HC000 comes out of reset, it will assert 
+BG* in order to grant the bus to the requesting device. The requesting 
+device will then most likely respond with BGACK*. The MC68HC000 will not 
+take back the bus until BR* and BGACK* are both negated.
+

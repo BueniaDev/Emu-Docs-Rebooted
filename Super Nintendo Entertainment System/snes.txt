@@ -1,0 +1,2594 @@
+ _________________  _________________  _________________  _________________
+|                 ||                 ||                 ||                 |
+|                 ||                 ||                 ||                 |
+|       __________||                 ||        _________||      ___________|
+|                  |        |        ||             /    |
+|                 ||        |        ||            /     |                 |
+ __________       ||        |        ||        ___/_____  ___________      |
+|                 ||        |        ||                 ||                 |
+|                 ||        |        ||                 ||                 |
+|_________________||________|________||_________________||_________________|
+****************************************************************************
+SNES Documentation v2.30: Written by Yoshi
+****************************************************************************
+Previous version: v2.21
+[* = Updated since previous version]
+
+*       snes.0.............Introduction
+*       snes.1.............SNES Register section
+*       snes.2.............SNES Colour section
+*       snes.3.............SNES Graphics section
+*       snes.4.............SNES Screen-mode section
+*       snes.5.............SNES OAM/Sprite section
+*       snes.6.............Super Magicomm disk registers
+-=NEW=- snes.7.............SNES Memory map
+-=NEW=- snes.8.............Those boring credits/thank-yous/hellos! :-)
+        sound.doc..........SPC-700 (sound) documentation by Antitrack
+        sprite.doc.........OBJ/OAM documentation
+-=NEW=- sid-spc.src........C64 sound emulator documentation/code by Antitrack
+*****************************************************************************
+All sections are formatted using whitespaces vs. actual tab characters. This
+is due to the fact that some people have their tabs set to 4 or 5 spaces
+rather than the vi-standard of 8.
+
+'sound.doc', 'sprite.doc', and 'sid-spc.src' are not formatted this way.
+
+snes.0.............Introduction
+        Well, seems like you're interested in the SNES programming world.
+ 
+        First off, learn 65c816 assembly. This document will probably be
+        WAY over your head if you don't even understand basic opcodes. I
+        don't plan on adding a "how.to.code.in.65c816" section to this
+        document, *EVER*. Learn it yourself. I can help you with it, but
+        you need to learn the basics yourself. It's worth it in the long-
+        run, trust me.
+ 
+        This document currently covers more than ANY other document i've
+        ever seen: No, i'm not bragging. I'm stating a fact. I'm proud to be
+        the one to release this information, too. I feel everyone has the
+        right to know about all of this, especially if they're interested in
+        getting a career in the SNES-world.
+ 
+        If you have any information to send me, such as typo comments, or
+        information which is "wrong" or *NEW* information, do so! I'm always
+        updating this thing: the more the better. It's looking great so
+        far, and I plan on keeping the rate-of-progress steady.
+ 
+        For more information about moi, read on! :-)
+****************************************************************************
+        I'm 17 years old; brown hair, blue/grey eyes. 5 foot 10 inches
+        tall (175cm), 145 pounds (62.25kg). I am currently in my 5th
+        year of high school (I failed my senior year), attending Corvallis
+        High School in Corvallis, Oregon.
+ 
+        I'm currently without a job, but i'd love to do development work
+        in a CS-related job, ESPECIALLY SNES-related. I'm available! :-)
+ 
+        In my spare time, I enjoy writing stories (books, if you must know.
+        I love writing, so...), SNES documentation (ha ha ha), programming
+        (in just about anything and everything), biking, sleeping, sketch-
+        ing, and IRCing. You can *ALWAYS* find me on IRC at just about ANY
+        time of the day. Leave me a /MSG -info note (which is sent to me
+        via EMail, FYI), and i'll get it when I log in to check my mail.
+
+        As of January 24th, 1995, I will be 18 years old. I'm not employed
+        (vs. unemployed, where you've actually HAD a job). Dunno what'll
+        happen to me. Maybe i'll die. Who knows. I hope to move in with
+        a good friend of mine, but i'm too chicken to ask. I'd rather be
+        out on the street w/out foot than be told "No you can't" - it's a
+        huge flaw in my philosophy... Sorry.
+
+        You can reach via the following ways:
+                  InterNET: yoshi@CSOS.ORST.EDU (fast, and is preferred)
+                            yoshi@drift.winternet.com
+                       IRC: Yoshi
+                     Phone: 1+ 503-753-2431
+                 SnailMail: Jeremy Chadwick
+                            33811 Twin Maple Lane
+                            Corvallis, OR  97333
+                            USA
+****************************************************************************
+
+                                    December 28th, 1994
+                                                                - Yoshi
+snes.1.............SNES Register section
+ ----------------------------------------------------------------------------
+|rwd2?|Address|Title & Explanation                                           |
+||||||-----------------------------------------------------------------------|
+||||||                                                                       |
+||||||__  ?: Don't know what the statistics on this register are             |
+|||||____ 2: 2 byte (1 word) length register                                 |
+||||_____ d: Double-byte write required when writing to this register        |
+|||______ w: Writable register                                               |
+||_______ r: Readable register                                               |
+|                                                                            |
+|Words in brackets ( [] ) are the official "names" of the registers          |
+|Words in braces ( {} ) are different from the "real" SNES manual            |
+|Bits define 1 as "ON/ENABLE" and 0 as "OFF/DISABLE," unless otherwise stated|
+|Registers without any bits/defined-data can be assumed to be 8 bits in size |
+|and should only be read once.                                               |
+|----------------------------------------------------------------------------|
+|NOTE! I have renamed all occurances of "Plane {x}" to "BG{x+1}." This means |
+|stuff like "Plane 2" is now referred to as "BG3" - This is how it is done   |
+|(so i'm told) in the official SNES documentation, so for compatibility and  |
+|comprehension, i've renamed everything.                                     |
+|                                                                            |
+|I have also renamed "Sprites" to "OBJ", "objects," or "OAM" for the same    |
+|reason that I renamed "Plane" to "BG."                                      |
+|----------------------------------------------------------------------------|
+|rwd2?|Address|Title & Explanation                                           |
+|----------------------------------------------------------------------------|
+| w   |$2100  |Screen display register [INIDISP]                             |
+|     |       |x000bbbb              x: 0 = Screen on.                       |
+|     |       |                         1 = Screen off.                      |
+|     |       |                   bbbb: Brightness ($0-$F).                  |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$2101  |OAM size register [OBSEL]                                     |
+|     |       |sssnnbbb              s: 000 =  8x8  or 16x16.                |
+|     |       |                         001 =  8x8  or 32x32.                |
+|     |       |                         010 =  8x8  or 64x64.                |
+|     |       |                         011 = 16x16 or 32x32.                |
+|     |       |                         100 = 16x16 or 64x64.                |
+|     |       |                         101 = 32x32 or 64x64.                |
+|     |       |                      n: Name selection (upper 4k word addr). |
+|     |       |                      b: Base selection (8k word seg. addr).  |
+|     |       |                                                              |
+|     |       |                                                              |
+| w 2 |$2102  |OAM address register [OAMADDL/OAMADDH]                        |
+|     |       |aaaaaaaa r000000m     a: OAM address.                         |
+|     |       |                      r: OAM priority rotation.               |
+|     |       |                      m: OAM address MSB.                     |
+|     |       |                                                              |
+|     |       |                                                              |
+| wd  |$2104  |OAM data register [OAMDATA]                                   |
+|     |       |???????? ????????                                             |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$2105  |Screen mode register [BGMODE]                                 |
+|     |       |abcdefff              a: BG4 tile size (0=8x8, 1=16x16).      |
+|     |       |                      b: BG3 tile size (0=8x8, 1=16x16).      |
+|     |       |                      c: BG2 tile size (0=8x8, 1=16x16).      |
+|     |       |                      d: BG1 tile size (0=8x8, 1=16x16).      |
+|     |       |                      e: Highest priority for BG3 in MODE 1.  |
+|     |       |                      f: MODE definition.                     |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$2106  |Screen pixelation register [MOSAIC]                           |
+|     |       |xxxxabcd              x: Pixel size (0=Smallest, $F=Largest). |
+|     |       |                      a: Affect BG4.                          |
+|     |       |                      b: Affect BG3.                          |
+|     |       |                      c: Affect BG2.                          |
+|     |       |                      d: Affect BG1.                          |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$2107  |BG1 VRAM location register [BG1SC]                            |
+|     |       |xxxxxxab              x: Base address                         |
+|     |       |                     ab: SC size                              |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$2108  |BG2 VRAM location register [BG2SC] -|                         |
+| w   |$2109  |BG3 VRAM location register [BG3SC]  |- Same as $2107.         |
+| w   |$210A  |BG4 VRAM location register [BG4SC] -|                         |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$210B  |BG1 & BG2 VRAM location register [BG12NBA]                    |
+|     |       |aaaabbbb              a: Base address for BG2.                |
+|     |       |                      b: Base address for BG1.                |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$210C  |BG3 & BG4 VRAM location register [BG34NBA]                    |
+|     |       |aaaabbbb              a: Base address for BG4.                |
+|     |       |                      b: Base address for BG3.                |
+|     |       |                                                              |
+|     |       |                                                              |
+| wd  |$210D  |BG1 horizontal scroll register [BG1HOFS]                      |
+|     |       |mmmmmaaa aaaaaaaa              a: Horizontal offset.          |
+|     |       |                               m: Only set with MODE 7.       |
+|     |       |                                                              |
+|     |       |This is an intruiging register. Like the types define, it has |
+|     |       |to be written to twice: The first byte holds the first 8 bits,|
+|     |       |and the second byte holds the last 3 bits. This makes a total |
+|     |       |of 11 bits for information. This only proves true for MODes   |
+|     |       |0 to 6. MODE 7 uses 13 bits instead of 11. As long as you're  |
+|     |       |not in MODE 7, you can store $00 in the 2nd byte for a smooth |
+|     |       |scrolling background.                                         |
+|     |       |                                                              |
+|     |       |                                                              |
+| wd  |$210E  |BG1 vertical scroll register   [BG1VOFS] -|                   |
+| wd  |$210F  |BG2 horizontal scroll register [BG2HOFS]  |                   |
+| wd  |$2110  |BG3 vertical scroll register   [BG2VOFS]  |                   |
+| wd  |$2111  |BG3 horizontal scroll register [BG3HOFS]  |- Same as $210D.   |
+| wd  |$2112  |BG3 vertical scroll register   [BG3VOFS]  |                   |
+| wd  |$2113  |BG4 horizontal scroll register [BG4HOFS]  |                   |
+| wd  |$2114  |BG4 vertical scroll register   [BG4VOFS] -|                   |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$2115  |Video port control [VMAIN]                                    |
+|     |       |i000abcd              i: 0 = Addr-inc after writing to $2118  |
+|     |       |                             or reading from $2139.           |
+|     |       |                         1 = Addr-inc after writing to $2119  |
+|     |       |                             or reading from $213A.           |
+|     |       |                     ab: Full graphic (see table below).      |
+|     |       |                     cd: SC increment (see table below).      |
+|     |       |abcd|Result                                                   |
+|     |       |----|---------------------------------------------------------|
+|     |       |0100|Increment by 8 for 32 times (2-bit formation).           |
+|     |       |1000|Increment by 8 for 64 times (4-bit formation).           |
+|     |       |1100|Increment by 8 for 128 times (8-bit formation).          |
+|     |       |0000|Address increments 1x1.                                  |
+|     |       |0001|Address increments 32x32.                                |
+|     |       |0010|Address increments 64x64.                                |
+|     |       |0011|Address increments 128x128.                              |
+|     |       |----|---------------------------------------------------------|
+|     |       |                                                              |
+|     |       |                                                              |
+| w 2 |$2116  |Video port address [VMADDL/VMADDH]                            |
+|     |       |???????? ????????                                             |
+|     |       |                                                              |
+|     |       |                                                              |
+| w 2 |$2118  |Video port data [VMDATAL/VMDATAH]                             |
+|     |       |???????? ????????                                             |
+|     |       |                                                              |
+|     |       |According to bit 7 of $2115, the data can be stored as:       |
+|     |       |                                                              |
+|     |       |Bit 7|Register                   |Result                      |
+|     |       |-----|---------------------------|----------------------------|
+|     |       |  0  |Write to $2118 only.       |Lower 8-bits written then   |
+|     |       |     |                           |address is increased.       |
+|     |       |  0  |Write to $2119 then $2118. |Address increased when both |
+|     |       |     |                           |are written to (in order).  |
+|     |       |  1  |Write to $2119 only.       |Upper 8-bits written, then  |
+|     |       |     |                           |address is increased.       |
+|     |       |  1  |Write to $2118 then $2119. |Address increased when both |
+|     |       |     |                           |are written to (in order).  |
+|     |       |-----|---------------------------|----------------------------|
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$211A  |MODE7 settings register [M7SEL]                               |
+|     |       |ab0000yx             ab: (see table below).                   |
+|     |       |                      y: Vertical screen flip (1=flip).       |
+|     |       |                      x: Horizontal screen flip (1=flip).     |
+|     |       |                                                              |
+|     |       |ab|Result                                                     |
+|     |       |--|-----------------------------------------------------------|
+|     |       |00|Screen repetition if outside of screen area.               |
+|     |       |10|Character 0x00 repetition if outside of screen area.       |
+|     |       |11|Outside of screen area is back-drop screen in 1 colour.    |
+|     |       |--|-----------------------------------------------------------|
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$211B  |COS (COSINE) rotate angle / X Expansion [M7A]                 |
+| w   |$211C  |SIN (SIN)    rotate angle / X Expansion [M7B]                 |
+| w   |$211D  |SIN (SIN)    rotate angle / Y Expansion [M7C]                 |
+| w   |$211E  |COS (COSINE) rotate angle / Y Expansion [M7D]                 |
+| wd  |$211F  |Center position X (13-bit data only)    [M7X]                 |
+| wd  |$2120  |Center position Y (13-bit data only)    [M7Y]                 |
+|     |       |                                                              |
+|     |       |MODE 7 formulae for rotation/enlargement/reduction:           |
+|     |       |                                                              |
+|     |       |X2 = AB * X1-X0 + X0                                          |
+|     |       |Y2 = CD * Y1-Y0 + Y0                                          |
+|     |       |                                                              |
+|     |       |A = COS(GAMMA)*(1/ALPHA)      B = SIN(GAMMA)*(1/ALPHA)        |
+|     |       |C = SIN(GAMMA)*(1/BETA)       D = COS(GAMMA)*(1/BETA)         |
+|     |       |                                                              |
+|     |       |  GAMMA: Rotation angle.                                      |
+|     |       |  ALPHA: Reduction rates for X (horizontal).                  |
+|     |       |   BETA: Reduction rates for Y (vertical).                    |
+|     |       |X0 & Y0: Center coordinate.                                   |
+|     |       |X1 & Y1: Display coordinate.                                  |
+|     |       |X2 & Y2: Coordinate before calculation.                       |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$2121  |Colour # (or pallete) selection register [CGADD]              |
+|     |       |xxxxxxxx              x: Address (color #).                   |
+|     |       |                                                              |
+|     |       |                                                              |
+| wd  |$2122  |Colour data register [CGDATA]                                 |
+|     |       |xxxxxxxx              x: Value of colour.                     |
+|     |       |                                                              |
+|     |       |SNES colour is 15 bit; 5 bits for red, green, and blue. The   |
+|     |       |order isn't RGB though: It's BGR (RGB reversed!).             |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$2123  |Window mask settings register [W12SEL]                        |
+|     |       |abcdefgh              a: Disable/enable BG2 Window 2.         |
+|     |       |                      b: BG2 Window 2 I/O (0=IN).             |
+|     |       |                      c: Disable/enable BG2 Window 1.         |
+|     |       |                      d: BG2 Window 1 I/O (0=IN).             |
+|     |       |                      e: Disable/enable BG1 Window 2.         |
+|     |       |                      f: BG1 Window 2 I/O (0=IN).             |
+|     |       |                      g: Disable/enable BG1 Window 1.         |
+|     |       |                      h: BG1 Window 1 I/O (0=IN).             |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$2124  |Window mask settings register [W34SEL]                        |
+|     |       |abcdefgh              a: Disable/enable BG4 Window 2.         |
+|     |       |                      b: BG4 Window 2 I/O (0=IN).             |
+|     |       |                      c: Disable/enable BG4 Window 1.         |
+|     |       |                      d: BG4 Window 1 I/O (0=IN).             |
+|     |       |                      e: Disable/enable BG3 Window 2.         |
+|     |       |                      f: BG3 Window 2 I/O (0=IN).             |
+|     |       |                      g: Disable/enable BG3 Window 1.         |
+|     |       |                      h: BG3 Window 1 I/O (0=IN).             |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$2125  |Window mask settings register [WOBJSEL]                       |
+|     |       |abcdefgh              a: Disable/enable colour Window 2.      |
+|     |       |                      b: Colour Window 2 I/O (0=IN).          |
+|     |       |                      c: Disable/enable colour Window 1.      |
+|     |       |                      d: Colour Window 1 I/O (0=IN).          |
+|     |       |                      e: Disable/enable OBJ Window 2.         |
+|     |       |                      f: OBJ Window 2 I/O (0=IN).             |
+|     |       |                      g: Disable/enable OBJ Window 1.         |
+|     |       |                      h: OBJ Window 1 I/O (0=IN).             |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$2126  |Window 1 left position register [WH0]                         |
+|     |       |aaaaaaaa              a: Position.                            |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$2127  |Window 1 right position register [WH1] -|                     |
+| w   |$2128  |Window 2 left position register [WH2]   |- Same as $2126.     |
+| w   |$2129  |Window 2 right position register [WH3] -|                     |
+|     |       |                                                              |
+|     |       |I may have the Window numbers reversed; as in, $2126 may be   |
+|     |       |for Window 2, not Window 1; $2127 may be for Window 2, not    |
+|     |       |Window 1... and so on...                                      |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$212A  |Mask logic settings for Window 1 & 2 per screen [WBGLOG]      |
+|     |       |aabbccdd              a: BG4 parms -|                         |
+|     |       |                      b: BG3 parms  |- See table in $212B.    |
+|     |       |                      c: BG2 parms  |                         |
+|     |       |                      d: BG1 parms -|                         |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$212B  |Mask logic settings for Colour Windows & OBJ Windows [WOBJLOG]|
+|     |       |0000aabb              a: Colour Window parms (see table below)|
+|     |       |                      b: OBJ Window parms (see table below).  |
+|     |       |                                                              |
+|     |       |Hi-bit|Lo-bit|Logic                                           |
+|     |       |------|------|------------------------------------------------|
+|     |       |   0  |   0  |OR                                              |
+|     |       |   0  |   1  |AND                                             |
+|     |       |   1  |   0  |XOR                                             |
+|     |       |   1  |   1  |XNOR                                            |
+|     |       |------|------|------------------------------------------------|
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$212C  |Main screen designation [TM]                                  |
+|     |       |000abcde              a: OBJ/OAM disable/enable.              |
+|     |       |                      b: Disable/enable BG4.                  |
+|     |       |                      c: Disable/enable BG3.                  |
+|     |       |                      d: Disable/enable BG2.                  |
+|     |       |                      e: Disable/enable BG1.                  |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$212D  |Sub-screen designation [TD]                                   |
+|     |       |*** Same as $212C, but for the sub-screens, not the main.     |
+|     |       |                                                              |
+|     |       |Remember: When screen addition/subtraction is enabled, the    |
+|     |       |sub screen is added/subtracted against the main screen.       |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$212E  |Window mask main screen designation register [TMW]            |
+|     |       |*** Same as $212C, but for window-masks.                      |
+|     |       |                                                              |
+| w   |$212F  |Window mask sub screen designation register [TSW]             |
+|     |       |*** Same as $212E, but for the sub screen.                    |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$2130  |Fixed color addition or screen addition register [CGWSEL]     |
+|     |       |abcd00ef             ab: Main (see table below).              |
+|     |       |                     cd: Sub (see table below).               |
+|     |       |                      e: 0 = Enable +/- for fixed colour.     |
+|     |       |                         1 = Enable +/- for sub screen.       |
+|     |       |                      f: Colour & char-data = direct color    |
+|     |       |                         data (MODE 3, 4 & 7 only).           |
+|     |       |                                                              |
+|     |       |ab|Result                                                     |
+|     |       |--|-----------------------------------------------------------|
+|     |       |00|All the time.                                              |
+|     |       |01|Inside window only.                                        |
+|     |       |10|Outside window only.                                       |
+|     |       |11|All the time.                                              |
+|     |       |--|-----------------------------------------------------------|
+|     |       |                                                              |
+| w   |$2131  |Addition/subtraction for screens, BGs, & OBJs [CGADSUB]       |
+|     |       |mrgsabcd              m: 0 = Enable + colour-data mode.       |
+|     |       |                         1 = Enable - colour-data mode.       |
+|     |       |                      r: See below for more info.             |
+|     |       |                      g: Affect back-area.                    |
+|     |       |                      s: Affect OBJs.                         |
+|     |       |                      a: Affect BG4.                          |
+|     |       |                      b: Affect BG3.                          |
+|     |       |                      c: Affect BG2.                          |
+|     |       |                      d: Affect BG1.                          |
+|     |       |                                                              |
+|     |       |*** 'r' is some sort-of "1/2 of colour data" on/off bit. When |
+|     |       |    the colour constant +/- or screen +/- is performed, desig-|
+|     |       |    nate whether the RGB result in the +/- area should be 1/2 |
+|     |       |    or not; the back-area is not affected.                    |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$2132  |Fixed colour data for fixed colour +/- [COLDATA]              |
+|     |       |bgrdddddd             b: Set to change blue.                  |
+|     |       |                      g: Set to change green.                 |
+|     |       |                      r: Set to change red.                   |
+|     |       |                      d: Set colour constant data for +/-.    |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$2133  |Screen mode/video select register [SETINI]                    |
+|     |       |sn00pvshi                                                     |
+|     |       |                      s: Super-impose SFX graphics over ex-   |
+|     |       |                         ternal video (usually 0).            |
+|     |       |                      n: External mode (screen expand). When  |
+|     |       |                         sing MODE 7, enable.                 |
+|     |       |                      p: 0 = 256 resolution.                  |
+|     |       |                         1 = 512 sub screen resolution.       |
+|     |       |                      v: 0 = 224 vertical resolution.         |
+|     |       |                         1 = 239 vertical resolution.         |
+|     |       |                      s: See below for more info.             |
+|     |       |                      i: 0 = No interlace.                    |
+|     |       |                         1 = Interlaced display.              |
+|     |       |                                                              |
+|     |       |*** When in interlace mode, select either the 1-dot per line  |
+|     |       |    mode or the 1-dot repeated every 2-lines mode. If '1' is  |
+|     |       |    set in this bit, the OBJ seems to be reduced vertically   |
+|     |       |    by 1/2.                                                   |
+|     |       |                                                              |
+|     |       |*** Interlaced mode is used in the SNES test cartridge. It    |
+|     |       |    does flicker, but it gives a FULL 480 vertical resolution.|
+|     |       |                                                              |
+|     |       |                                                              |
+|r    |$2134  |Multiplication result register (low) [MPYL]                   |
+|r    |$2135  |Multiplication result register (middle) [MPYM]                |
+|r    |$2136  |Multiplication result register (high) [MPYH]                  |
+|     |       |*** Result is 8 bits long for $2134, $2135, and $2136.        |
+|     |       |                                                              |
+|     |       |                                                              |
+|r    |$2137  |Software latch for horizontal/vertical counter [SLHV]         |
+|     |       |aaaaaaaa                 a: Result.                           |
+|     |       |                                                              |
+|     |       |The counter value at the point when $2137 is read can be      |
+|     |       |latched. Data read is meaningless.                            |
+|     |       |                                                              |
+|     |       |                                                              |
+|r    |$2138  |Read data from OAM {OAMDATAREAD}                              |
+|r  2 |$2139  |Read data from VRAM {VMDATALREAD/VMDATAHREAD}                 |
+|r    |$213B  |Read data from CG-RAM (colour) {CGDATAREAD}                   |
+|r d  |$213C  |Horizontal scanline location [OPHCT]                          |
+|r d  |$213D  |Vertical scanline location  [OPVCT]                           |
+|     |       |*** Registers $213C and $213D are 9-bits in length.           |
+|     |       |                                                              |
+|     |       |                                                              |
+|r    |$213E  |PPU status flag & version number [STAT77]                     |
+|     |       |trm0vvvv              t: Time over (see below).               |
+|     |       |                      r: Range over (see below).              |
+|     |       |                      m: Master/slave mode select. Usually 0. |
+|     |       |                      v: Version # ($5C77 (???)).             |
+|     |       |                                                              |
+|     |       |*** Range: When the quantity of the OBJ (size is non-relevant)|
+|     |       |           becomes 33 pieces or more, '1' is set.             |
+|     |       |     Time: When the quantity of the OBJ which is converted to |
+|     |       |           8x8 is 35 pieces or more, '1' will be set.         |
+|     |       |                                                              |
+|     |       |                                                              |
+|r    |$213F  |PPU status flag & version number [STAT78]                     |
+|     |       |fl0mvvvv              f: Field # scanned in int. mode (0=1st).|
+|     |       |                      l: Set if external signal (light pen,   |
+|     |       |                         etc.) is installed/applied.          |
+|     |       |                      m: NTSC/PAL mode (0=NTSC, 1=PAL).       |
+|     |       |                      v: Version # ($5C78 (???)).             |
+|     |       |                                                              |
+|     |       |                                                              |
+|rw   |$2140  |[APUI00] -|                                                   |
+|rw   |$2141  |[APUI01]  |- Audio registers. See sound.doc and sid-spc.src.  |
+|rw   |$2142  |[APUI02]  |                                                   |
+|rw   |$2143  |[APUI03] -|                                                   |
+|     |       |                                                              |
+|     |       |                                                              |
+|rw   |$2180  |Read/write WRAM register [WMDATA]                             |
+|rw   |$2181  |WRAM data register (low byte) [WMADDL]                        |
+|rw   |$2182  |WRAM data register (middle byte) [WMADDM]                     |
+|rw   |$2183  |WRAM data register (high byte) [WMADDH]                       |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$4200  |Counter enable [NMITIMEN]                                     |
+|     |       |a0yx000b              a: NMI/VBlank interrupt.                |
+|     |       |                      y: Vertical counter.                    |
+|     |       |                      x: Horizontal counter.                  |
+|     |       |                      b: Joypad read-enable.                  |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$4201  |Programmable I/O port (out-port) [WRIO]                       |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$4202  |Multiplicand 'A' [WRMPYA]                                     |
+| w   |$4203  |Multiplier 'B' [WRMPYB]                                       |
+|     |       |*** Absolute multiplication used when using the two above reg-|
+|     |       |    isters. Formulae is: 'A (8-bit) * B (8-bit) = C (16-bit)'.|
+|     |       |    Result can be read from $4216.                            |
+|     |       |                                                              |
+|     |       |                                                              |
+| w 2 |$4204  |Dividend C [WRDIVL/WRDIVH]                                    |
+| w   |$4205  |Divisor B [WRDIVB]                                            |
+|     |       |*** Absolute division used when using the two above registers.|
+|     |       |    Formulae is 'C (16-bit) / B (8-bit) = A (16-bit)'.        |
+|     |       |    Result can be read from $4214, and the remainder read from|
+|     |       |    $4216.                                                    |
+|     |       |*** Operation will start when $4205 is set, and will be com-  |
+|     |       |    pleted after 16 machine cycles.                           |
+|     |       |                                                              |
+|     |       |                                                              |
+| w 2 |$4207  |Video horizontal IRQ beam position/pointer [HTIMEL/HTIMEH]    |
+|     |       |0000000x xxxxxxxx     x: Beam position.                       |
+|     |       |                                                              |
+|     |       |Valid values for x range from 0 to 339, due to overscan. The  |
+|     |       |timer is reset every scanline, so unless it's disabled, you'll|
+|     |       |receive an interrupt every time the beam hits the value given.|
+|     |       |                                                              |
+|     |       |                                                              |
+| w 2 |$4209  |Video vertical IRQ beam position/pointer [VTIMEL/VTIMEH]      |
+|     |       |0000000y yyyyyyyy     y: Beam position.                       |
+|     |       |                                                              |
+|     |       |Same as $4207, but valid values for y are 0 to 261 (based from|
+|     |       |overscan at the top of the screen).                           |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$420B  |DMA enable register [MDMAEN]                                  |
+|     |       |abcdefgh              a: DMA channel #7.                      |
+|     |       |                      b: DMA channel #6.                      |
+|     |       |                      c: DMA channel #5.                      |
+|     |       |                      d: DMA channel #4.                      |
+|     |       |                      e: DMA channel #3.                      |
+|     |       |                      f: DMA channel #2.                      |
+|     |       |                      g: DMA channel #1.                      |
+|     |       |                      h: DMA channel #0.                      |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$420C  |HDMA enable register.                                         |
+|     |       |*** Same as $420B, virtually.                                 |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$420D  |Cycle speed register [MEMSEL]                                 |
+|     |       |0000000x              x: 0 = Normal (2.68MHz).                |
+|     |       |                         1 = Fast (3.58MHz).                  |
+|     |       |                                                              |
+|     |       |Note that using the fast mode requires 120ns or faster EPROMs.|
+|     |       |                                                              |
+|     |       |                                                              |
+|r    |$4210  |NMI register [RDNMI]                                          |
+|     |       |x000vvvv              x: Disable/enable NMI.                  |
+|     |       |                      v: Version # ($5A22 (???))              |
+|     |       |                                                              |
+|     |       |Bit 7 can be reset to 0 by reading this register.             |
+|     |       |                                                              |
+|     |       |                                                              |
+|rw   |$4211  |Video IRQ register [TIMEUP]                                   |
+|     |       |i0000000              i: 0 = IRQ is not enabled.              |
+|     |       |                         1 = IRQ is enabled.                  |
+|     |       |                                                              |
+|     |       |This location MUST be read to clear a horizontal or vertical  |
+|     |       |raster interrupt. It's all relative to $4200. If the horiz-   |
+|     |       |ontal timer interrupt (bit 4, $4200) is set then the interrupt|
+|     |       |will be generated according to the position in $4207. Same    |
+|     |       |thing is for vertical timing (bit 5, $4200) but the position  |
+|     |       |will be read from $4209, not $4207.                           |
+|     |       |                                                              |
+|     |       |                                                              |
+|rw   |$4212  |Status register [HVBJOY]                                      |
+|     |       |xy00000a              x: 0 = Not in VBlank state.             |
+|     |       |                         1 = In VBlank state.                 |
+|     |       |                      y: 0 = Not in HBlank state.             |
+|     |       |                         1 = In HBlank state.                 |
+|     |       |                      a: 0 = Joypad not ready.                |
+|     |       |                         1 = Joypad ready.                    |
+|     |       |                                                              |
+|     |       |                                                              |
+|r    |$4213  |Programmable I/O port (in-port) [RDIO]                        |
+|     |       |                                                              |
+|     |       |                                                              |
+|r  2 |$4214  |Quotient of divide result [RDDIVL/RDDIVH]                     |
+|     |       |                                                              |
+|     |       |                                                              |
+|r  2 |$4216  |Multiplication or divide result [RDMPYL/RDMPYH]               |
+|     |       |                                                              |
+|     |       |                                                              |
+|r    |$4218  |Joypad #1 status register [JOY1L]                             |
+|     |       |abcd0000              a: A button (1=pressed).                |
+|     |       |                      b: X button (1=pressed).                |
+|     |       |                      c: Top-Left (1=pressed).                |
+|     |       |                      d: Top-Rght (1=pressed).                |
+|     |       |                                                              |
+|r    |$4219  |Joypad #1 status register [JOY1H]                             |
+|     |       |abcdefgh              a: B button (1=pressed).                |
+|     |       |                      b: Y button (1=pressed).                |
+|     |       |                      c: Select   (1=pressed).                |
+|     |       |                      d: Start    (1=pressed).                |
+|     |       |                      e: Up       (1=pressed).                |
+|     |       |                      f: Down     (1=pressed).                |
+|     |       |                      g: Left     (1=pressed).                |
+|     |       |                      h: Right    (1=pressed).                |
+|     |       |                                                              |
+|r    |$421A  |Joypad #2 status register [JOY2L] -|                          |
+|r    |$421B  |Joypad #2 status register [JOY2H]  |                          |
+|r    |$421C  |Joypad #3 status register [JOY3L]  |- Same as $4218 & $4219.  |
+|r    |$421D  |Joypad #3 status register [JOY3H]  |                          |
+|r    |$421E  |Joypad #4 status register [JOY4L]  |                          |
+|r    |$421F  |Joypad #4 status register [JOY4H] -|                          |
+|     |       |*** Joypad registers can be read w/ a 16-bit accum/X/Y and    |
+|     |       |    both the high and low bytes will received valid data.     |
+|     |       |                                                              |
+|     |       |                                                              |
+|----------------------------------------------------------------------------|
+|The following data is for DMA-transfers. 'x' represents the DMA channel #,  |
+|which ranges from 0 to 7. So, the following would represent each section:   |
+|DMA #0: $4300-$4305.                                                        |
+|DMA #1: $4310-$4315.                                                        |
+|....................                                                        |
+|DMA #7: $4370-$4375.                                                        |
+|----------------------------------------------------------------------------|
+| w   |$43x0  |DMA Control register [DMAPX]                                  |
+|     |       |vh0cbaaa              v: 0 = CPU memory -> PPU.               |
+|     |       |                         1 = PPU -> CPU memory.               |
+|     |       |                      h: For HDMA only:                       |
+|     |       |                         0 = Absolute addressing.             |
+|     |       |                         1 = Indirect addressing.             |
+|     |       |                      c: 0 = Auto address inc/decrement.      |
+|     |       |                         1 = Fixed address (for VRAM, etc.).  |
+|     |       |                      b: 0 = Automatic increment.             |
+|     |       |                         1 = Automatic decrement.             |
+|     |       |                      a: Transfer type:
+|     |       |                         000 = 1 address write twice: LH.     |
+|     |       |                         001 = 2 addresses: LH.               |
+|     |       |                         010 = 1 address write once.          |
+|     |       |                         011 = 2 addresses write twice: LLHH  |
+|     |       |                         100 = 4 addresses: LHLH              |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$43x1  |DMA Destination register [BBADX]                              |
+|     |       |xxxxxxxx              x: Low-byte address.                    |
+|     |       |                                                              |
+|     |       |*** The upper-byte address is assumed to be $21, making your  |
+|     |       |    access addresses $2100 to $21FF.                          |
+|     |       |                                                              |
+|     |       |                                                              |
+| w 2 |$43x2  |Source address [A1TXL/A1TXH]                                  |
+| w   |$43x4  |Source bank address [A1BX]                                    |
+| w 2 |$43x5  |DMA transfer size & HDMA address register [DASXL/DASXH]       |
+|     |       |*** When using DMA, $43x5 defines the # of bytes to be trans- |
+|     |       |    ferred via DMA itself. When using HDMA, $43x5 defines the |
+|     |       |    data address ($43x5 = low byte, $43x6 = hi byte).         |
+|     |       |                                                              |
+|     |       |                                                              |
+| w   |$43xA  |Number of lines for HDMA transfer [NTRLX]                     |
+|     |       |cxxxxxxx              c: Continue (0=yes, 1=no (???)).        |
+|     |       |                      x: # of lines to transfer.              |
+|----------------------------------------------------------------------------|
+|Additional information follows.                                             |
+|Most of the following information is for SMC files, and where the header    |
+|info is kept in memory, etc. etc. etc...                                    |
+|----------------------------------------------------------------------------|
+|rw   |$FEED  |UNDOCUMENTED REGISTER: Felon's banana register [FBNANACNT]    |
+|     |       |rcnnnnnn              r: Ripe bit (0=ripe, 1=rotten).         |
+|     |       |                      c: Colour bit (0=yellow, 1=green).      |
+|     |       |                      n: Number of bananas.                   |
+|     |       |                                                              |
+|     |       |*** This register counts the number of bananas Felon currently|
+|     |       |    has in his possession... (Who the hell is Felon?!).       |
+|     |       |                                                              |
+|     |       |*** According to numerous sources, this register can be used  |
+|     |       |    to calculate pi to the 5-billionth digit in 20 clock      |
+|     |       |    cycles. The number of cycles corresponds to Felon's age,  |
+|     |       |    increasing by 1 every 365 days (1 year). It is increased  |
+|     |       |    by 2 every leap year.                                     |
+|     |       |                                                              |
+|     |       |                                                              |
+|rw   |$FFC0  |Cartridge title.                                              |
+|rw   |$FFD6  |ROM/RAM information on cart.                                  |
+|rw   |$FFD7  |ROM size.                                                     |
+|rw   |$FFD8  |RAM size.                                                     |
+|rw   |$FFD9  |Developer ID code.                                            |
+|rw   |$FFDB  |Version number.                                               |
+|rw   |$FFDC  |Checksum complement.                                          |
+|rw   |$FFDE  |Checksum.                                                     |
+|rw   |$FFEA  |NMI vector/VBL interrupt.                                     |
+|rw   |$FFEC  |Reset vector.                                                 |
+ ----------------------------------------------------------------------------
+snes.2.............SNES Colour section
+ ----------------------------------------------------------------------------
+|The SNES has some interesting colour characteristics. The colour, theoret-  |
+|ically is 15 bit; each RGB value (Red, Green, and Blue) has 5 bits for each |
+|colour.                                                                     |
+|                                                                            |
+|When it comes to putting the colour data into $2122, the format (in binary) |
+|is the following:                                                           |
+|  b: Blue                   ?bbbbbgg gggrrrrr                               |
+|  g: Green                                                                  |
+|  r: Red                                                                    |
+|  ?: The infamous bit-of-confusion. :-)                                     |
+|                                                                            |
+|A quick colour chart could be the following:                                |
+|  $7FFF [0111 1111 1111 1111]: White.                                       |
+|  $001F [0000 0000 0001 1111]: Red.                                         |
+|  $03E0 [0000 0011 1110 0000]: Green.                                       |
+|  $7C00 [0111 1100 0000 0000]: Blue.                                        |
+|  $7C1F [0111 1100 0001 1111]: Purple.                                      |
+|  $7FE0 [0111 1111 1110 0000]: Aqua.                                        |
+|  $03FF [0000 0011 1111 1111]: Yellow.                                      |
+ ----------------------------------------------------------------------------
+snes.3.............SNES Graphics section
+ ----------------------------------------------------------------------------
+|For those of you who don't know how the SNES does do it's graphics, it      |
+|uses tiles (surprise surprise!).                                            |
+|                                                                            | 
+|There are different MODEs on the SNES; the most famous being MODE 7.        |
+|Most people think that $2106 (Screen Pixelation: Look in SNES.1 for an ex-  |
+|planation on this register) is MODE 7. *** THIS IS NOT MODE 7!!! ***.       |
+|So, the next time the pixels get really "big" (almost making them look like |
+|look like IBM-clone 320x200x256 MODE 13h graphics), and your friend says    |
+|"WOW! MODE 7 is really awesome," punch him/her in the nose for me. Just     |
+|joking. :-)                                                                 |
+|                                                                            |
+|I'll be explaining MODE 1. I know how MODE 7 works, but since i've never    |
+|used it, don't plan on me explaining it in the near future. Sorry to those  |
+|who were looking for a MODE 7 document. Look elsewhere...                   |
+|                                                                            |
+|MODE   # of BGs       MaxColour/Tile  Palettes      Colours                 |
+|----------------------------------------------------------------------------|
+|0      4              4               8             32                      |
+|1      3              16/16/4         8             128                     |
+|                                                                            |
+|MODE 0 is good for geometric shapes (if you were going to rotate a wire-    |
+|frame cube, or something like that), basic star scrolls, or a very 'bland'  |
+|text scroller... it's pretty cool and doesn't take up much space.           |
+|                                                                            |
+|I'm going to explain MODE 1, since MODE 0 is the same thing but with less   |
+|bitplanes. :-)                                                              |
+|                                                                            |
+|MODE 1 is really best for things; detailed star scrolls, text scrollers,    |
+|geometric shapes, and filled objects. It's the most common used MODE in the |
+|the professional SNES programming world.                                    |
+|                                                                            |
+|You need to "setup the plane" to tell it what tile goes where. If you want  |
+|demo-code, check out 'test.asm' in 'test.lzh'.                              |
+|----------------------------------------------------------------------------|
+|So, lets assume we have a character (a 8x8 tile) which we want to work with |
+|to figure out the SNES's colour scheme:                                     |
+|                                                                            |
+|TestCHR1       dcb $00,$00,$00,$00,$00,$00,$00,$00 ; '@'                    |
+|TestCHR2       dcb $00,$3C,$4E,$5E,$5E,$40,$3C,$00 ; '@'                    |
+|                                                                            |
+|You're probably wondering how the two lines above turn into actual graphic  |
+|data on your monitor or television set. Very simple. Consider each byte     |
+|(each new $xx statement) a new pixel line. Tile size is 8x8.                |
+|                                                                            |
+|      %00000000          = $00                                              |
+|      %00000000          = $00    This is TestCHR1                          |
+|      %00000000          = $00                                              |
+|      %00000000          = $00                                              |
+|      %00000000          = $00                                              |
+|      %00000000          = $00                                              |
+|      %00000000          = $00                                              |
+|      %00000000          = $00                                              |
+|                                                                            |
+|      %00000000          = $00                                              |
+|      %00111100          = $3C    This is TestCHR2                          |
+|      %01001110          = $4E                                              |
+|      %01011110          = $5E                                              |
+|      %01011110          = $5E                                              |
+|      %01000000          = $40                                              |
+|      %00111100          = $3C                                              |
+|      %00000000          = $00                                              |
+|                                                                            |
+|The at-symbol ('@') is visible in TestCHR2. Now you're probably wondering   |
+|"Well, that tells me how to define a pixel on and off; what about the colour|
+|itself!" Once again, very simple, but a tad more complex:                   |
+|                                                                            |
+|If you have a 0 for bitplane 0, a 0 for bitplane 1, a 0 for bitplane 2,     |
+|and a 0 for bitplane 3, you get color #0; eg.:                              |
+|                       0000 = Color #0                                      |
+|                       ||||___________Bitplane 0                            |
+|                       |||__________Bitplane 1                              |
+|                       ||_________Bitplane 2                                |
+|                       |________Bitplane 3                                  |
+|                                                                            |
+|So, now, think about a 0 for bitplane 0, a 1 for bitplane 1 and 2, and a 0  |
+|for bitplane 3:                                                             |
+|                       0110 = Color #6                                      |
+|                       ||||___________Bitplane 0                            |
+|                       |||__________Bitplane 1                              |
+|                       |_________Bitplane 2                                 |
+|                       |________Bitplane 3                                  |
+|                                                                            |
+|Keep in mind, this is the best explanation i've ever seen done about SNES   |
+|pixel color definition. Until I see better, I'd have to say this is the     |
+|best it's gonna get.                                                        |
+|The result above gives you the color # per pixel; it's interesting. It's an |
+|"overlay" method, so-to-speak, not to confuse this w/ main and sub-screens. |
+ ----------------------------------------------------------------------------
+snes.4.............SNES Screen-mode section
+ ----------------------------------------------------------------------------
+|MODE   # of BGs       MaxColour/Tile  Palettes      Colours                 |
+|----------------------------------------------------------------------------|
+|0      4              4               8             32                      |
+|1      3              16/16/4         8             128                     |
+|2      ?              ???             ?             ???                     |
+|3      2              256 & 16        1 & 8         256 & 32                |
+|4      2              256 & 4         1 & 8         256 & 32                |
+|5      ?              ???             ?             ???                     |
+|6      ?              16              8             128 (Interlaced mode)   |
+|7      ?              256             1             256                     |
+|----------------------------------------------------------------------------|
+|Parms which have question marks ("?") mean that I don't know their stats.   |
+|Any information would be greatly appreciated! I have personally tested some |
+|of the MODEs (MODE 0, 1, and 3), but none of the rest.                      |
+|----------------------------------------------------------------------------|
+|MODE 1's "16/16/4" means you can have 16 colours per tile on BG1 and BG2,   |
+|but on BG3 you can only have 4.                                             |
+|----------------------------------------------------------------------------|
+|MODE 3 can have 256 colours on the first plane, but only 16 on the second.  |
+|MODE 4 isn't the exact same as MODE 3 (as v2.20 of my document stated), but |
+|i'm waiting for someone to tell me the differences...                       |
+ ----------------------------------------------------------------------------
+snes.5.............SNES OAM/Sprite section
+ ----------------------------------------------------------------------------
+|The OBJs use a lookup table that contains info on their X and Y position on |
+|the screen, their size, if they're flipped vertically or horizontally, their|
+|colour, and the actual data.                                                |
+|                                                                            |
+|The format you need to make the table is as follows:                        |
+|                                                                            |
+|                                                                            |
+|Spr. #   Size   Offset        Explanation                                   |
+|----------------------------------------------------------------------------|
+|   0     Byte   0             xxxxxxxx           x: X-location.             |
+|         Byte   1             yyyyyyyy           y: Y-location.             |
+|         Byte   2             abcdeeeC           a: Vertical flip.          |
+|                                                 b: Horizontal flip.        |
+|                                                 c: Playfield priority.     |
+|                                                 d: Playfield priority.     |
+|                                                 e: Pallete #.              |
+|         Byte   3             CCCCCCCC           C: Character data.         |
+|                                                                            |
+|   1     Byte   4             xxxxxxxx           x: X-location.             |
+|         Byte   5             yyyyyyyy           y: Y-location.             |
+|         Byte   6             abcdeeeC           a: Vertical flip.          |
+|                                                 b: Horizontal flip.        |
+|                                                 c: Playfield priority.     |
+|                                                 d: Playfield priority.     |
+|                                                 e: Pallete #.              |
+|         Byte   7             CCCCCCCC           C: Character data.         |
+|...and so on...                                                             |
+|----------------------------------------------------------------------------|
+|Continue this table all the way down to OBJ #127 (out of 128). Don't think  |
+|you're finished quite yet: There is one more table of data required.        |
+|                                                                            |
+|2 bits are defined for each OBJ (eg. byte #0 holds the info for OBJ 0, 1, 2,|
+|and 3; byte #1 holds the info for OBJ 4, 5, 6, and 7). Therefore, 128/4 is  |
+|32 bytes of data for the following table:                                   |
+|                                  ab                                        |
+|                                  ||____Size toggle bit.                    |
+|                                  |_____MSB of X-position bit.              |
+|                                                                            |
+|So, the 4 bytes/sprites + the block are put into the OAM table by consec-   |
+|utive writes to the OAM data register. You first should set the OAM address |
+|to $0000, then shove your data into it.                                     |
+|                                                                            |
+|If you don't set the block after the OAM as well, the results are bad. All  |
+|the data for the MSB stuff wouldn't be defined correctly, which would result|
+|in your entire OBJ table being wacko. Have atleast some 0's there or a table|
+|which you really want to use in the long run.                               |
+ ----------------------------------------------------------------------------
+snes.6.............Super Magicomm disk registers
+ ----------------------------------------------------------------------------
+|I have never used an actual Super MagiComm before, and I would strongly re- |
+|commend not using these unless you know what each one does for sure. If you |
+|decide to write any sort-of operating system for the SNES, please do get in |
+|touch with me.                                                              |
+|                                                                            |
+|The below registers i've never tested, or had tested. If you end up killing |
+|your console unit because of this, I TAKE NO RESPONSIBILITY.                |
+|                                                                            |
+|Location    Value returned when read         Value input when written       |
+|----------------------------------------------------------------------------|
+|$C000:      Input Register                                                  |
+|$C002:                                       Digital Output Register        |
+|$C004:      Main Status Register                                            |
+|$C005:      Data Register                    Data Register                  |
+|$C007:      Digital Input Register           Disk Control Register          |
+|$C008:      Parallel Data                    Parallel Data                  |
+|$C009:      Parallel Status                                                 |
+ ----------------------------------------------------------------------------
+snes.7.............SNES Memory map
+ ----------------------------------------------------------------------------
+|Here's a really basic memory map of the SNES's memory. Thanks to Geggin of  |
+|Censor for supplying this. Reminder: this is a memory map in MODE 20.       |
+|----------------------------------------------------------------------------|
+|Bank   |Address       |Description                                          |
+|-------|--------------|-----------------------------------------------------|
+|$00-$3F|$0000-$1FFF   |Scratchpad RAM. Set D-reg here if you'd like (I do)  |
+|       |$2000-$5FFF   |Reserved (PPU, DMA)                                  |
+|       |$6000-$7FFF   |Expand (???)                                         |
+|       |$8000-$FFFF   |ROM (for code, graphics, etc.)                       |
+|$70    |$0000-$7FFF   |SRAM (BRAM) - Battery RAM                            |
+|$7E    |$0000-$1FFF   |Scratchpad RAM (same as bank $00 to $3F)             |
+|       |$2000-$FFFF   |RAM (for music, or whatever)                         |
+|$7F    |$0000-$FFFF   |RAM (for whatever)                                   |
+ ----------------------------------------------------------------------------
+snes.8.............Those boring credits/thank-yous/hellos! :-)
+I'd like to thank the following people:
+
+        Jeremy Gordon: Thanks for supplying me your sprite documentation. I
+                       don't think this doc. would be complete without it!
+                       Also for 65816 v2.0! Excellent assembler.
+            AntiTrack: Thanks for the source! Next time, i'll ask! (grin)
+                Toshi: I know you can't say much due to your job, but I
+                       really appreciate all the moral support you've given
+                       me. I wish I could show you how much it means to me.
+                minus: Work on TRASM some more! Fix' dem bugs! :-)
+                 Jehu: Keep in touch. Get back to me about the job!
+              Clay C.: Without you, who knows where i'd be.
+                Troy_: I appreciate the logos!
+     Geggin of Censor: Thanks for the memory map!
+    D. Messiah of PiR: ...for all the EMail, long talks, 'n all that jazz.
+                       You're like a brother to me.
+
+Hellos and "HEY! You're important too!"s go out to:
+
+        III_Demon, JackRippr, Amos, Norm, Hardware, Skywalkr, KingPhish,
+        felon, AntiTrack, IRSMan, sendog, SHORYUKEN, _grazzt, RuGalz, and
+        all the rest of the #SNES and famidev-gang.
+
+sound.doc..........SPC-700 (sound) documentation by Antitrack
+From PARADIS@htu.tu-graz.ac.at Fri Mar 25 08:41:08 1994
+
+        The Bloody SPC-700
+        ------------------
+
+
+A try to stumble into the inner secret of a nasty chip.
+
+By Antitrack exclusively for the FAMIDEV development group.
+
+
+Chapter 1:
+----------
+
+
+FACTS
+
+* The SPC 700 is a very stupid sound chip with about the worst handling
+  that you have seen in your lifetime.
+
+* This chip is a co processor. He has a quite large instruction set
+  (contrary to the Amiga's COPPER, who has a very small one) and 64KB RAM
+  memory, of which you can use atleast 32KB.  (or so)
+
+* All program and data that is supposed to be run by this chip must be'
+  moved to the SPC's own ram with a small loop that pokes each byte of
+  your SPC assembler program and (e.g. sample-)data into four memory
+  locations : $2140 - $2143. They are your only chance to communicate with
+  the SPC.
+
+* These four memory locations have different meanings for read and write;
+  if you read (LDA) $2140, you get the data from memory loc. 00f4 (or so)
+  of the sound chip.
+
+* On power-on, the SPC 700 jumps (much like the main processor) to a very
+  small ROM area that resides from $ffc0 to $ffff inside the SPC.
+  (This chip REALLY follows the black box principle, eh...) This program
+  at $ffc0 is waiting to get the data in the right format on his input ports
+  at $00f4/5/6/7 , which are $2140/1/2/3 from the 65c816's (e.g. your's )
+  point of view.
+
+* Your main program will therefore have to follow the SPC's conditions and
+  poke all the program and data for the SPC into 2140/1/2/3 in a special
+  order.
+
+* When transmission is completed, you will also have transmitted the start
+  address of your SPC code, and the SPC will start to execute your 
+program
+  there.
+
+
+
+--------------------QUESTIONS.
+
+
+Q: How do I move my program and data to the SPC then, what format do I have
+to use?
+
+
+A: First, your SPC data/code has to be moved from ROM to the extra RAM at
+e.g. $7f0000 . Dont ask me why it has to be in RAM, probably it doesnt
+but all the existing routines that send data to the SPC do something like
+that.
+
+Your data/code has to be in groups which I will call "chunks". A valid chunk
+looks like that:
+
+first word: number of bytes to transmit to SPC           -+
+sec. word : start address where to move data to the SPC   |  one chunk
+byte 4-???? : your data/code                             -+
+
+You can have as many chunks as you want to , but the last chunk must be like
+that:
+
+first word : $0000
+second word: Start address of your code.
+
+
+Q: So if you are right, this means: After I transmitted all my code and
+data, and my own SPC code takes over the control, I might encounter problems
+if my SPC program has to communicate with the outer world (the 65c816).
+What if the main program wants to change sounds? What if a background melody
+shall always play on two voices, and extra two voices will be used for
+sound effects whenever the player sprite e.g. picks up an object?
+
+A: That is sure a point. Your own code will have to look at memory locations
+$00f4/00f5/00f6/00f7 , because they are the only accessible from outside
+at $2140/1/2/3. The easiest way would be: As soon as any of $f4-$f7 change,
+jump into the Boot ROM at $ffc0 (?) so the SPC is executing his receive
+routine again. Then you *probably* can send another SPC chunk with new
+sound and code to the SPC....
+
+Q: This only helps if a complete new tune is to be played, this doesnt help
+if a melody using two voices shall still remain....
+
+A: Thats true. The best approach is to send own command bytes to the 
+SPC and
+your SPC code has to check out $f4-$f7 constantly and react to it.....
+A command byte like $00 could mean: sound off,
+                    $01           : play tune 1
+                    .
+                    .
+                    .
+                    $0f          : play tune $0f
+                    $10           : play jingle (fx) 01
+                    .
+                    .
+                    .
+                    $ff           : jump to $ffc0 (??) the receive 
+ROM routine
+
+
+
+Q: is there another approach?
+
+A: Yes there is. As you probably know, all important addresses of the
+SPC 700 reside inside its own RAM's zeropage:
+
+Address         / register          / usage
+0000            Volume left
+0001            Volume right
+0002            Pitch low
+0003            Pitch high          (The total 14 bits of pitch 
+height)
+0004            SRCN                Designates source number from 0-
+255
+0005            ADSR 1
+0006            ADSR 2
+0007            GAIN            Envelope can be freely designated by 
+your code
+0008            ENVX            Present val of envelope with DSP 
+rewrites
+0009            VALX            Present wave height val
+
+(and so on...)
+
+Your approach would be to move only sample data there, and/or (lots of) very
+small chunks of data with a target address in the zeropage, and a starting
+address of e.g. $ffc0. The small chunks would access zeropage addresses e.g.
+for the volume etc and thus result in tones; if this is done every frame
+you might end up with a music player quite similar to the C64 styled ones.
+
+
+Q: So anyway, in what format exactly do I have to move data to the SPC?
+
+A: I have the following source code for you, but let me explain it a bit
+BEFORE you start to dig into it.
+
+I've already mentioned the general "chunk" format. The loop does the 
+following:
+
+
+- move ram destination address to $2142/3 (akku: 16 bit)
+- move either #$00 or #$01 into 2141, this depends if you have more than $0100
+  bytes of data for the SPC;
+
+- first time (first chunk you transmit): move constant #$cc into 2140
+
+- loop: poke each byte that you want to be transmitted into 2140 (word)
+  the higher 7-15 bits of your accu-word contain the number of bytes already
+  moved (e.g. 00 on the start)
+
+- cmp $2140 with this number of bytes already moved (lower 8 bits of this
+  number only!) and wait if its not equal.
+
+- until the loop is over.
+
+- for the next chunk header this is repeated, but not #$cc is moved into
+  2140 but "nn" (lobyte of number of bytes moved) +3 or +6 if it was 00 when
+  +3 was used.
+
+EXAMPLE:
+
+        move #$0400 to 2142 /word access
+
+        move #$01 to 2141
+        move #$cc to 2140
+
+        move "gg00" to 2140 where "gg" is the first real code/data byte for
+                            the SPC
+
+        wait till 2140 is #$00
+
+        move hh01 to 2140 where "hh" is the second byte of code or data for SPC
+
+        wait till 2140 is #$01
+
+        move ii02 to 2140 where "ii" is the 3rd byte of data for the SPC....
+
+        wait till 2140 is #$02
+
+
+       lets say "ii" was the last byte. Now we add #$04 (3+carry) to #$02
+       (#$02 being the number-1 of how many bytes we moved to the SPC), we
+       will push it onto the stack), now :
+
+       fetch the next header , poke target RAM address into $2142 (word)
+       poke 00 or 01 into 2141 depending of how many bytes to send,
+       poke #$06 into 2140 (06 : number of bytes sent from last chunk-1 + 3 )
+
+
+I think I got this scheme pretty much right this time. Now, is PLEASE someone
+going to donate their home-brewed SPC dis/assemblers to me? Oh pretty please,
+I hate silent SNES's !  :)
+
+
+Source code follows, reassembled from a PAN/Baseline demo "xmas wish 92/93":
+----------------------------------------------------------------------------
+
+
+; entry to the code starts here
+
+
+            SEP #$30       ; x y a set to 8 bit length
+            LDA #$FF       ; ff into audio0w (write)
+            STA $2140
+            REP #$10       ; x,y: 16 bit length
+            LDX #$7FFF
+l0DB5B      LDA $018000,X  ; move rom music data to ram at $7f0000
+            STA $7F0000,X
+            LDA $028000,X  ; move rom music data to ram at $7f0000
+            STA $7F8000,X
+            DEX
+            BPL l0DB5B
+            LDA #$80       ; screen on , probably not important at all
+            STA $2100
+            LDA #$00       ; 00fd/00fe/00ff point to the data that is now
+            STA $00FD      ; in ram at $7f0000
+            LDA #$00
+            STA $00FE
+            LDA #$7F
+            STA $00FF
+            STZ $4200      ; disable nmi and timer h/v count
+            SEI            ; disable irq
+
+            JSR l0DBCD     ; unknown sub routine, labeled "RESTART" by PAN/ATX
+
+            SEP #$30       ; all regs 8 bit
+l0DB8B      LDA $2140      ; wait for reply from sound chip ?
+            BNE l0DB8B
+            LDA #$E0       ; audio3w ?
+            STA $2143
+            LDA #$FF       ; send data to sound chip ?
+            STA $2142      ; $ffe0 this could be an address within the
+                           ; sound chip ROM between $ffc0 and $ffff 
+in the
+                           ; ROM mask.......
+            LDA #$01       ; send data to sound chip ?
+            STA $2141
+            LDA #$01       ; send data to sound chip ?
+            STA $2140
+
+l0DBA4      LDA $2140      ; wait for reply from sound chip ?
+            CMP #$01       ; what a fuck of a protocol .... :(
+            BNE l0DBA4
+
+l0DBAB      LDA $2140      ; wait again for reply from soundchip ?
+            CMP #$55
+            BNE l0DBAB
+
+            LDA $0207       ; aha ... move $0207 to sound chip ?
+            STA $2141       ; probably sound number selector
+            LDA #$07
+            STA $2140       ; send data to sound chip
+l0DBBD      LDA $2140       ; wait until sound chip accepted data?
+            CMP #$07
+            BNE l0DBBD
+l0DBC4      LDA $2140       ; wait for reply ?
+            CMP #$55
+            BNE l0DBC4
+            CLI
+            RTS
+
+l0DBCD      PHP            ; labeled "RESTART" by pan/ATX
+            JSR l0DBD8     ;
+            PLP
+            LDA #$00       ; 00 into audio0w
+            STA $2140
+            RTS
+
+l0DBD8      PHP
+            REP #$30       ; a,x,y 16 bit regs
+            LDY #$0000     ; needed first time at lda [$fd],y : pointer to ram
+            LDA #$BBAA
+l0DBE1      CMP $2140      ; wait for sound chip $2140/2141 ?
+            BNE l0DBE1
+            SEP #$20      ; akku  8 bit
+            LDA #$CC
+            BRA l0DC12    ;  oh well, another mystery  :-)
+
+
+; jump here if overflow is set  e.g. if more than $0100 data to move
+l0DBEC      LDA [$FD],Y   ; get data from ram pointer
+            INY           ; the accumulator is about to get "xx00" where
+            XBA           ;    /"xx" is the byte from [fd],y (first data byte)
+            LDA #$00      ;    /and resides into bit 15-7 of accu, and 00 is
+            BRA l0DBFF    ;    /#$00 (8bit number of bytes already sent)
+
+
+l0DBF4      XBA           ; accu is now "nn??" ?? is old data from last loop
+            LDA [$FD],Y   ; accu is now "nnxx" with xx the newest data byte
+            INY           ;                                   /for the SPC!
+            XBA           ; accu is now "xxnn"
+l0DBF9      CMP $2140     ; wait for sound chip to reply with "nn" !!
+            BNE l0DBF9
+            INC A         ; increment number of bytes that were sent...
+                          ; accu is now "xxnn" with newest val for nn:=nn+1
+
+l0DBFF      REP #$20      ; akku 16 bit
+            STA $2140     ; poke "xxnn" to soundchip. xx is actual data,
+            SEP #$20      ; akku 8 bit  ! nn is the 8-bit cutted number of bytes
+            DEX                         ! which were already sent!!
+            BNE l0DBF4    ; as many times as xreg says...
+
+
+l0DC09      CMP $2140     ; byte "nn" will be replied from the SPC if data
+            BNE l0DC09    ; received correctly!
+l0DC0E      ADC #$03      ; compare accu with #$fb  ADC WILL ADD #$04 COZ
+                          ; CARRY IS ALWAYS SET AFTER THE CMP!!! ATTENTION!
+            BEQ l0DC0E    ; if accu was $fb then accu := $03 . (what for?)
+
+l0DC12      PHA           ; push value accu+$04 to stack (or beginning: #$cc)
+            REP #$20      ; accu = 16 bit
+            LDA [$FD],Y   ; get ram data 2 bytes
+            INY           ; point to next word
+            INY
+            TAX           ; x:=a : number of bytes to transmit
+            LDA [$FD],Y   ; get ram data
+            INY
+            INY
+            STA $2142     ; audio2w  : possibly the dest. area in the spc700
+            SEP #$20      ; accu 8 bit
+            CPX #$0100    ; set carry if first ram data was >= 0100
+            lda #$00      ;
+            ROL           ;
+            STA $2141     ; if ram data >= 0100, poke "1" into reg 1 otherw 0
+            ADC #$7F      ; SET OVERFLOW FLAG IF X>=$0100 !!!! (nice trick!)
+            PLA
+            STA $2140     ; $cc in the first case , nn+4 on all later cases
+
+l0DC32      CMP $2140    ; wait for snd chip reply
+            BNE l0DC32
+            BVS l0DBEC   ; if there were more than $0100 data for the spc's RAM
+                         ; move them where they R supposed to belong 
+to!
+            PLP
+            RTS
+
+
+            PLA
+            STA $2140    ; same shit, never been jumped into
+l0DC3F      CMP $2140
+            BNE l0DC3F
+            BVS l0DBF9
+            PLP
+            RTS
+
+
+
+
+
+
+; also lets look at 7f0000: the first few bytes at 7f0000 are:
+
+7f0000: b7 0e 00 04 20 cd cf bd e8 00 5d af c8 f0 d0 fb 5d d5 00 01 d5 00 02
+
+b7 0e should be number of bytes to transmit, 0400 the destination inside the 
+spc....
+at this point I really need an SPC dis/assembler.....  :(((
+
+Okay well my first source was incompetent, sure thing. But I think I could
+solve a lot of questions meanwhile.
+sprite.doc.........OBJ/OAM documentation
+SPRITE DOC
+------------------------------------------------------------
+
+if you haven't already obtained "yoshi doc", get it and read it before you
+read this doc....
+
+
+Part I - the bitplane representation of a 16 color 8x8 pixel tile
+-----------------------------------------------------------------
+
+sprites are made of tiles, in particular 4-bitplane tiles, 4-bitplane 
+tiles, means that the tiles are made of 4-bit color values, so this means 
+that the tiles can have a maximum of 16 colors.
+
+in many graphics formats, this type of data would be stored as follows 
+(assuming a 8 pixel by 8 pixel tile)
+
+			$1 $0 $2 $8 $2 $4 $5
+			$2 $0 $6 $1 $f $e $1
+			$a $2 $2 $2 $6 $7 $0
+			$1 $0 $2 $8 $2 $4 $5
+			$1 $0 $2 $8 $2 $4 $5
+			$1 $0 $2 $8 $2 $4 $5
+			$1 $0 $2 $8 $2 $4 $5
+			$1 $0 $2 $8 $2 $4 $5
+
+where each hex number represents a color, so pixel (0,0) would be color 
+number "1", and pixel (4,2) would be color "6"....this is <not> the case 
+on the super nintendo....for reasons having to do with the implementation 
+of the graphics engine, the super nintendo represents its image data in 
+the "bitplane" format, assuming and 8 pixel by 8 pixel tile with 16 
+colors, this data would have four bitplanes (0-3) of monochrome, binary 
+image data:
+
+
+		   	0 0 0 0 0 0 0 0
+     			0 0 0 0 0 0 0 0 1
+     			0 0 0 0 0 0 0 0 1 2
+     			0 0 0 0 0 0 0 0 1 2 3
+     			0 0 0 0 0 0 0 0 1 2 3
+     			0 0 0 0 0 0 0 0 1 2 3
+     			0 0 0 0 0 0 0 0 1 2 3
+     			0 0 0 0 0 0 0 0 1 2 3
+       			  1 1 1 1 1 1 1 1 2 3
+         		    2 2 2 2 2 2 2 2 3
+           		      3 3 3 3 3 3 3 3
+
+
+four monochrome 8x8 pixel images stacked on top of each other. if you 
+wanted pixel (4,2) to have the color "6" you would have to put a "1" in 
+bitplane one, and a "1" in bitplane two, with the bitplane zero and three 
+having "0"'s.  this is because the binary representation of "6" is "0110".
+
+ok, so it is obviously possible to store each monochrome bitplane in 8 
+bytes, each byte representing a row in the bitplane. so a single tile 
+takes up 32 bytes (8 bytes per row * 8 rows * 4 bitplanes) of memory.
+
+
+Part II - the way tiles are stored in vram for sprite data
+---------------------------------------------------------
+
+in vram you store a tile 16 bits at a time as follows:
+
+		<-------2 bytes at a time------>
+		<--1 byte wide-><--1 byte wide->
+
+		[plane 0, row 0][plane 1, row 0]
+		[plane 0, row 1][plane 1, row 1] 
+		[plane 0, row 2][plane 1, row 2]
+               		       ..
+                               ..
+                               ..
+		[plane 0, row 7][plane 1, row 7]
+		[plane 2, row 0][plane 2, row 0]
+		[plane 2, row 1][plane 2, row 1]
+		[plane 2, row 2][plane 2, row 2]
+                               ..
+	                       ..
+                               ..
+		[plane 2, row 7][plane 2, row 7]
+
+
+the super nintendo can have two different sizes of sprite on the screen 
+at one time, you can choose from the following combinations:
+	
+      [value]      [sprite size 0][sprite size 1]
+	000	      8x8 pixel	    16x16 pixel
+	001	      8x8 pixel	    32x32 pixel
+        010	      8x8 pixel	    64x64 pixel
+        011          16x16 pixel    32x32 pixel
+        100          16x16 pixel    64x64 pixel
+        101	     32x32 pixel    64x64 pixel
+
+it is set in the upper three bits of address $2101....so to use 8x8 pixel 
+sprites, and 32x32 pixel sprites, you would load $2101 with the value
+"001xxxxx" (where x is don't care)
+
+the lower five bits of address $2101 are also very important, these bits 
+tell the super nintendo where in vram your sprites are located. the 
+lowest three bits are the "name base", and the fourth and fifth bits are the 
+"name". the "name" bits specify the upper 4k word of the sprite address, 
+and the "name base" specfies the offset. so if put you tile data in vram 
+$0000 you would set these bits all to zero.
+
+suppose you want to have four 32 pixel by 32 pixel sprites; each would be  
+composed of 16 tiles, each tile is numbered, tiles $0-$3f
+
+			[sprite 0]
+		        0  1  2  3
+			4  5  6  7
+			8  9  a  b
+		        c  d  e  f
+	
+			    ..		
+			    ..
+
+			[sprite 3]
+			30 31 32 33
+			34 35 36 37
+			38 39 3a 3b
+			3c 3d 3e 3f
+			
+in vram, these tiles, $0 through tile $3f would be store in an interlaced 
+fashion as follows:
+
+
+$0  $1  $2  $3  $10 $11 $12 $13 $20 $21 $22 $23 $30 $31 $32 $33
+$4  $5  $6  $7  $14 $15 $16 $17 $24 $25 $26 $27 $34 $35 $36 $37
+
+do you see the pattern? you must store the first row (four tiles) of each
+sprite, and then the second row, then the third, etc....
+
+if you were dealing with 8x8 sprites, you would have to store the first
+row of 16 sprites, then the second row of the 16 sprites, etc....
+
+if you were dealing with 16x16 sprites, you have to store the first row
+of 8 sprites, then the second, then the third, etc...
+
+with 64x64, yep, you guessed it, the first row of two sprites, then the
+second row, etc....
+
+
+
+Part III  - setting up the OAM table for your sprites
+-----------------------------------------------------
+
+for each sprite in the sprite table (maximum of 128 sprites, numbered 0-127)
+you must have four bytes of information, the first byte is the low 8 bits of
+the horizontal position of the sprite, the second byte is the vertical
+position of the sprite, the third byte is the "address" of the sprite...
+it is not the actual vram address, it is the tile number, that is to say,
+the physical vram address of the sprite can be obtained by the following:
+multiply the sprite "address" by 32 (because each tile is 32 bytes) and add it
+to the starting vram address that you set in the $2101 register.
+this tile number points to the first tile in the sprite...the snes expects the
+rest of tiles to follow in the order described in the previous section...
+the next byte containes the 9th bit of the tile "address" and a few attributes
+
+				bit 0   = 9th bit
+				bit 1-3 = palette number
+				bit 4,5 = playfield priority
+				bit 6   = horizontal flip
+				bit 7   = horizonal flip
+
+the palette number is not a 4 bit number, so obviously, you can only choose
+between 8 of the 16 palettes....if you set these bits to all 0, you will be
+selecting the eigth palette (palette 7), if you set them to "001" it is the
+ninth palette etc...it was trial and error, and some <serious> frustration
+before i figured this one out :) 
+
+to set these bytes in the OAM table, you must first setup the OAM "address"
+on the 16 bit register $2102 (and $2103). again this is not a real address,
+you use the 7 lowest bits of this address to select which sprite you
+would like to set the data for (sprite 0 to sprite 127)
+
+then you can write the four bytes discussed above to the register $2104, its
+like the color register, auto incrementing...
+
+so....what are all the other bits for??? (the remaining 9) well, i know about
+only two others, the highest bit (bit 15) is a sprite priority bit, it is
+basically the bit you set to "turn on" the sprite, and keep it being redrawn
+on the screen...its a little more than this, but thats all i know about its
+behavior.  so when you setup your table, (and periodically throughout the 
+sprites' display lifecycle) you must set this bit high....(for any sprite being
+displayed)
+
+there is another small table (32 bytes) that you must load into the OAM, these
+consist of two bits for every sprite, one of the bits being the 9th horizontal
+position bit, and the other is the size select bit (remember we can pick from
+two different size sprites on the screen at once) the first bit is the
+most significant horizontal location, and the second is the size toggle
+bit...
+
+to write this table the OAM, you must set the 9th bit of the "address" in $2103
+to one....then write the bytes, again it is an auto incrementing register 
+
+make sure that you have enabled the sprites to be on a particular plane (see
+the yoshi doc, on $212C....and make sure that you have set your palette
+correctly (remember sprite palette 0 is the 8th palette!!!)
+
+			good luck....
+
+sid-spc.src........C64 sound emulator documentation/code by Antitrack
+; The following program is a reassembly of the c64-soundchip emulation routines
+; written by Alfatech/Triad ooops I mean Alfatech/Censor. I have tried to make
+; this code as readable as possible in order to help people get started with
+; snes SPC700 sound programming.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ THANKS TO ABSOLUTELY EVERYONE FOR BEING SUCH A LACK OF A HELP!!!!  (grrrr) ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+; especially you guys on #snes, #snes!, famidev; Corsair, Pothead, Sir Jinx,
+; and the rest of the Internet!
+; or in other words, i had to find out everything myself again.  :(
+; And no, I still dont have an assembler for the spc700, just a disassembler :(
+; thats why you will notice the big lack of pseudoopcodes, macros etc.   :((
+
+;----------------------------------------------------------------------------
+
+; Well first let us remember how a sound usually works on the C64. The C64
+; sound chip is located at memory $d400 to $d41b, with these memory locations
+; having the following (registers) meaning:
+
+hexadec.
+address     meaning;  /bit7/bit6/bit5/bit4/bit3/bit2/bit1/bit0/
+
+d400        frequency to play lobyte      voice 1
+d401        frequency to play hibyte      voice 1
+d402        pulsewidth        lobyte
+d403        pulsewidth        hibyte bit 7-4 unused: max width:=$07ff
+d404        Waveform: noise/pulse/sawtooth/triangle/test/ringmod/syncmod/gate
+d405        attack decay    (4 bit attack,  4bit decay)
+d406        sustain release (4 bit sustain, 4bit release)
+
+d407        frequency to play lobyte      voice 2
+d408        frequency to play hibyte      voice 2
+d409        pulsewidth        lobyte
+d40a        pulsewidth        hibyte bit 7-4 unused: max width:=$07ff
+d40b        Waveform: noise/pulse/sawtooth/triangle/test/ringmod/syncmod/gate
+d40c        attack decay    (4 bit attack,  4bit decay)
+d40d        sustain release (4 bit sustain, 4bit release)
+
+d40e        frequency to play lobyte      voice 3
+d40f        frequency to play hibyte      voice 3
+d410        pulsewidth        lobyte
+d411        pulsewidth        hibyte bit 7-4 unused: max width:=$07ff
+d412        Waveform: noise/pulse/sawtooth/triangle/test/ringmod/syncmod/gate
+d413        attack decay    (4 bit attack,  4bit decay)
+d414        sustain release (4 bit sustain, 4bit release)
+
+d415        filter frequency lowbyte. bit 7-3 unused...
+d416        filter frequency highbyte
+d417        filter resonance upper 4 bits/filtex/filt3,2,1 (=select filter type)
+d418        3off/highpass/medpass/lowpass/vol3/vol2/vol1/vol0
+d419        unused
+d41a        unused
+d41b        unused too for this case ;)
+d41c        unused too for this case ;)
+
+
+A typical C64 sound routine consist of two parts, an INIT subroutine and a
+PLAYER subroutine. The INIT routine clears the sound chip registers and
+initializes all kind of pointers and variables for the PLAYER routine.
+The PLAYER routine is typically being called once every time the screen makes
+the vertical blank (VBL), thus, once the 24th part of a second.
+
+SO, if one emulates the c64 SID, he has at least to do the following:
+
+- move the C64 sound routine to ram at $7f0000  (64 k ram)
+- call the C64 sound PLAYER routine every VBL. The NMI of the SNES is
+  perfectly suitable to do this, but you can also do an IRQ routine of
+  your own.
+- Immidately afterwards, you should send the memory loactions $7fd400 to $7fd418
+  from SNES RAM memory to SPC RAM memory, using send (65c18) and receive
+  (spc700) routines of your own.
+- After receiving and putting in his own RAM memory, the SPC700 shall
+  evaluate the new RAM data, set its own DSP registers accordingly and
+  start playing, if appropriate.
+
+
+; Before you jump at the supposedly source code, let me warn that my
+; SPC disassembler seems to have some slight bugs, as well as my SPC manual.
+; the opcode $8f (mov $xx, #$yy) seems, accordingly to this sourcecode
+; move the value xx into the mem location yy. Thus the real syntax of this
+; command should be:  mov #$xx, $yy
+; e.g  8f 00 f6   mov #$00, $f6  ; move the value "00" into memory location $f6.
+; take note of this when reading this source code.
+
+
+
+;-------------------------------------------------
+;SPC700 Disassembler v0.1
+;Loading Blocks
+;Block 00: start $0400 length $07DB
+;Execution Address: $0400
+;-------------------------------------------------
+
+
+
+;------------------------------------------------------------------
+; Reassembly work (c) Antitrack Oct-17-1994
+;------------------------------------------------------------------
+
+
+
+0400 20         CLRP                  ;  clear direct page flag
+0401 CD CF      MOV     X,#$CF        ;  x:=$cf
+0403 BD         MOV     SP,X          ;  stack pointer := x
+0404 8F FF F4   MOV     $FF,#$F4      ;  2140 = ff
+0407 E8 00      MOV     A,#$00        ;  a := 0
+0409 5D         MOV     X,A           ;  x := 0
+040A AF         MOV     (X)+,A        ; Ä¿   clear 0000-00ef
+040B C8 F0      CMP     X,#$F0        ;  ³
+040D D0 FB      BNE     $040A         ; ÄÙ
+040F 5D         MOV     X,A           ;  x := 0
+0410 D5 00 01   MOV     $0100+X,A     ; ÄÄ¿  clear 0100-03ff
+0413 D5 00 02   MOV     $0200+X,A     ;   ³
+0416 D5 00 03   MOV     $0300+X,A     ;   ³
+0419 3D         INC     X             ;   ³
+041A D0 F4      BNE     $0410         ; ÄÄÙ
+041C 8F 00 F1   MOV     $00,#$F1      ;  port clear reg: do not clear ports.
+041F 8F 30 F1   MOV     $30,#$F1      ;  clear 2140-2143 aka 00f4-00f7
+0422 3F 4C 0A   CALL    $0A4C         ;  init and clear all dsp registers
+
+; if you have read the comments at $0a4c , you remembered I had told you we
+will have some very important data at $0200 real soon now. This data is the
+table of pointers to the start of each sample, so indeed its important. :)
+The following loop below will move the table from $09fc to $0200 and make
+it more appropriate, that is, if you consider the bytes at $09fc being:
+
+09fc:    $ww $xx $yy $zz
+
+the table at $0200 will be like the following:
+
+0200:    $ww $xx $ww $xx $yy $zz $yy $zz   and so on.
+
+or in other words, each 16 bit that appreared at $09fc (a word) will now
+appear twice at 0200:
+
+09fc:  dc.w  word1, word2, word3, word4....
+
+0200:  dc.w  word1, word1, word2, word2, word3, word3, word4, word4
+
+
+This table at $09fc contains the start pointers of all samples.  When you
+e.g. use sample 10, the DSP now looks at $0200+10 and finds the pointer to
+the sample. Neat innit?
+
+
+0425 CD 00      MOV     X,#$00        ;  I think this is understood now. :)
+0427 8D 00      MOV     Y,#$00        ;
+0429 F5 FC 09   MOV     A,$09FC+X     ;
+042C D6 00 02   MOV     $0200+Y,A     ;
+042F D6 02 02   MOV     $0202+Y,A     ;
+0432 3D         INC     X             ;
+0433 FC         INC     Y             ;
+0434 F5 FC 09   MOV     A,$09FC+X     ;
+0437 D6 00 02   MOV     $0200+Y,A     ;
+043A D6 02 02   MOV     $0202+Y,A     ;
+043D 3D         INC     X             ;
+043E FC         INC     Y             ;
+043F FC         INC     Y             ;
+0440 FC         INC     Y             ;
+0441 C8 50      CMP     X,#$50        ; this means we have got $25 samples,
+0443 D0 E4      BNE     $0429         ; which is decimal 37 samples. Makes
+                                      ; perfect sense if you look at the
+                                      ; sample table where we start at
+                                      ; sample 0 and end with sample 36.
+
+;-----------------------------------------------------------------
+; Anyway now we really have finished initializing a lot. We initialized
+; the DSP, we set up the sample pointer table, etc. etc.  now its time
+; for the real action.... hopefully (bleugh, sweat, cough, etc....)
+; The real action is: First we have to get the SID data from the 65c816 to
+; the SPC's ram; we will receive the data through the ports 2140-43 (from
+; the 65c816's point of view) and $f4-f7 (from the spc700's point).
+;-----------------------------------------------------------------
+
+
+0445 8F 00 F6   MOV     $00,#$F6      ;  00 into 2142
+
+; At 0448 is the (endless) main loop. Endless, that is, except a reset code
+; was received through the ports.
+
+0448 8F FD F4   MOV     $FD,#$F4      ;  fd into 2140
+044B 78 FE F4   CMP     $FE,#$F4      ;  wait till 2140=fe
+044E D0 FB      BNE     $044B         ;
+0450 8F FE F4   MOV     $FE,#$F4      ;  answer to the 65c816 by returning $fe
+0453 CD 00      MOV     X,#$00        ;  X:=0
+0455 3E F4      CMP     X,$F4         ;  wait for $00 in 2140 from the 65816
+0457 D0 FC      BNE     $0455         ;
+0459 E4 F5      MOV     A,$F5         ;  data ready in 2141
+045B D4 80      MOV     $80+X,A       ;  poke $d400-$d414 into $0080-$0095
+045D 3D         INC     X             ;     (7fd400/65c816)    (spc700)
+045E D8 F4      MOV     $F4,X         ; I guess this also means he doesnt emu-
+0460 C8 15      CMP     X,#$15        ; late the filter of the 64 soundchip !!
+0462 D0 F1      BNE     $0455         ;
+
+:----------------------------voice one emulation start here-----------------
+
+
+0464 E4 84      MOV     A,$84         ; $d404: check waveform
+0466 28 7F      AND     A,#$7F        ; mask out the 7th bit (noise waveform)
+0468 68 24      CMP     A,#$24        ; check for SAWTOOTH+RINGMODULATION wave
+046A D0 07      BNE     $0473         ; if no SAWTOOTH+RING, jmp to 0473
+046C 8F 34 F2   MOV     $34,#$F2      ; DSP register 34: voice 3, SAMPLE.
+046F C4 F3      MOV     $F3,A         ; we select sample $24 for SAWT+RING
+0471 2F 48      BRA     $04BB         ; sample $24 (36 dec.) is empty, SAW+RING is
+                                      ; thus not implemented here!!!
+
+0473 5D         MOV     X,A           ; This code is exec if NO SAW+RING.
+                                      ; X=A=actual waveform.
+0474 28 20      AND     A,#$20        ; check for waveform=SAWTOOTH.
+0476 F0 16      BEQ     $048E         ; NO sawtooth, continue at 048e
+0478 E4 84      MOV     A,$84         ; get voice1 waveform register again(d404)
+047A 8F 90 72   MOV     $90,#$72      ; 72/73 now point to $0990 ! which is the
+047D 8F 09 73   MOV     $09,#$73      ; sample #37's memory location.
+0480 FA 83 7A   MOV     $83<d>,$7A<s> ; well this seems to be another bug of
+                                      ; either the disassembler or the manual,
+; or both. Let me explain. The only thing that makes sense and that happens
+; here is: the contents of ram location $0083 is being moved to
+; 007a. or to speak BASIC: poke $7a, peek($83) / poke $7b, peek 84 (not sure)
+
+; This implies the <d> and <s> should be vice versa, shoudnt they.
+; Explanation: 83 contains the pulseHI width value, a backup of the pulse
+; width value is being made to mem loc 7a - the subroutine that will
+; be called soon (0b61) needs it that way. Akku still contains the waveform
+; register, d404.
+
+
+0483 3F 61 0B   CALL    $0B61         ;  calculate sample 37 (see there)
+0486 8F 34 F2   MOV     $34,#$F2      ;  voice 3, byte 4, source number: select
+0489 8F 25 F3   MOV     $25,#$F3      ;  sample #37, much to noones surprise :)
+048C 2F 1E      BRA     $04AC         ;  and go to 04ac
+
+;
+; Here we go if there is no sawtooth to play...
+;
+
+048E 7D         MOV     A,X           ;  a=x=d404=(waveform and #$7f) (bit7=0)
+048F 68 03      CMP     A,#$03        ;  all wave off, sync+gate on?
+0491 D0 09      BNE     $049C         ;  if not, goto 049c
+
+;
+; This is the code we execute if there is no(?) waveform to play but the
+; gate and syncronisation bits are both set....
+;
+
+0493 18 08 7B   OR      $08,#$7B     ; if sync+gate on, select random wave-
+                                     ; form for the DSP and lower the volume
+                                     ; by shifting SID's sustain/release.
+
+
+
+0496 4B 86      LSR     $86           ; shifting c64's sustain/release
+0498 4B 86      LSR     $86           ; right by two.
+                                      ; if the old bits were ssssrrrr, they
+                                      ; are now      00ssssrr.
+                                      ; (2 zerobits, 4 bit sustain , 2 release)
+049A 2F 1F      BRA     $04BB         ; jmp to 04bb
+
+
+049C 68 02      CMP     A,#$02        ; Syncronsisation on , gate off, ?
+049E D0 03      BNE     $04A3         ; no, goto 04a3
+04A0 60         CLRC                  ;
+04A1 84 83      ADC     A,$83         ; YES: add pulseHIbyte  to accu
+
+
+
+; remember here we also jump if the sync bit is not set at all. (bit1 of wave)
+04A3 8F 34 F2   MOV     $34,#$F2      ; voice 3, byte 4: source number
+04A6 1C         ASL     A             ; multiply accu by 2
+04A7 60         CLRC                  ;
+04A8 84 82      ADC     A,$82         ; add pulselow byte to accu
+04AA C4 F3      MOV     $F3,A         ; resulting in the Selected sample value.
+
+; now I really wonder if there could go something wrong. Imagine a tune
+; playing waveform $41: (pulse wave + gate bit on); lets say its pulse low is
+; $01. This would make us play sample ($41*2)+$01 = $83.
+; This is a nonexistant sample value coz we have only got samples from $00
+; to 50. I wonder if this is an actual bug in the routine here or
+; if I am wrong.   :-)
+
+
+
+
+04AC 8F 32 F2   MOV     $32,#$F2      ; voice 3, byte 2: pitch low!
+04AF E4 80      MOV     A,$80         ; get d400: frequency low
+04B1 28 F0      AND     A,#$F0        ; and it w $f0
+04B3 C4 F3      MOV     $F3,A         ; resulting in the pitch low value!
+04B5 8F 33 F2   MOV     $33,#$F2      ; voice 3, byte 3: pitch hi!
+04B8 FA 81 F3   MOV     $81<d>,$F3<s> ; poke $f3, peek($81): pitch hi=d401!!!
+
+
+
+04BB 8F 30 F2   MOV     $30,#$F2      ; voice 3, volume left:
+04BE FA 86 F3   MOV     $86<d>,$F3<s> ; set volume left to c64 Sustain/Release?!
+04C1 8F 31 F2   MOV     $31,#$F2      ; voice 3, volume right:
+04C4 FA 86 F3   MOV     $86<d>,$F3<s> ; set volume right to c64 Sus/Release ??!!
+
+; We seem to be finished w the emulation of voice1 of the 64's SID chip here.
+; If SAWTOOTH was selected, the precalculated sample #37 is played.
+
+; Whatever waveform it was anyway, we will use
+; the same frequency that the c64 uses, except they dont call it frequency,
+; they call it pitch.  :-)
+; Puzzling things happen to the sustain/release bytes of the 64, they are
+; nearly directly being poked into the _volume_ registers of the DSP.
+; I am still speaking what should happen most of the time, i am not talking
+; about syncronisation effect.
+; The sync effect is obvioulsy included whilst the RINGMODULATION seems
+; not to be included at all, which is a pity.
+
+;-----------------------voice 2 emulation start here --------------------
+
+
+04C7 E4 8B      MOV     A,$8B         ; accu=$8b=$d40b=waveform voice 2
+04C9 28 7F      AND     A,#$7F        ; mask out noise bit
+04CB 68 24      CMP     A,#$24        ; sawtooth+ringmod selected?
+04CD D0 07      BNE     $04D6         ; if no, goto 04d6
+04CF 8F 44 F2   MOV     $44,#$F2      ; voice 4, source number:
+04D2 C4 F3      MOV     $F3,A         ; play sample #$24 = 36 = empty
+                                ; thus we can see SAWT+RING is not implemented.
+04D4 2F 48      BRA     $051E         ;  jmp to end of routine
+
+
+04D6 5D         MOV     X,A           ; X=a, note that noise (bit7)=0    ?!!
+04D7 28 20      AND     A,#$20        ; is the sawtooth bit on?
+04D9 F0 16      BEQ     $04F1         ; NO, goto 04f1
+
+04DB E4 8B      MOV     A,$8B         ; get $d40b (waveform reg) again into acc
+04DD 8F B4 72   MOV     $B4,#$72      ; 72/73 point to 09b4: sample #38
+04E0 8F 09 73   MOV     $09,#$73      ;
+04E3 FA 8A 7A   MOV     $8A<d>,$7A<s> ; poke 7a, peek(8a): pulse hi voice 2
+04E6 3F 61 0B   CALL    $0B61         ; calculate sample 38
+04E9 8F 44 F2   MOV     $44,#$F2      ; voice 2 , source sample number
+04EC 8F 26 F3   MOV     $26,#$F3      ; is #38, no surprise .
+04EF 2F 1E      BRA     $050F         ; play sawtooth sample #38, end of routine
+
+04F1 7D         MOV     A,X           ; no sawtooth
+04F2 68 03      CMP     A,#$03        ; sync and gate on?
+04F4 D0 09      BNE     $04FF         ; if no sync+gate, goto 04ff
+04F6 18 10 7B   OR      $10,#$7B      ; Select Random samples YES
+04F9 4B 8D      LSR     $8D           ; shift right sustain/release
+04FB 4B 8D      LSR     $8D           ; ssssrrrr -> 00ssssrr
+04FD 2F 1F      BRA     $051E         ; end of routine
+
+04FF 68 02      CMP     A,#$02        ; sync on, gate off?`
+0501 D0 03      BNE     $0506         ; no, goto 0506
+0503 60         CLRC                  ;
+0504 84 8A      ADC     A,$8A         ; add pulse hi to accu (to 02)
+0506 8F 44 F2   MOV     $44,#$F2      ; voice 4 source number
+0509 1C         ASL     A             ; multiply (pulsehi+2) * 2
+050A 60         CLRC                  ;
+050B 84 89      ADC     A,$89         ; add pulse low
+050D C4 F3      MOV     $F3,A         ; and select it as sample # to play
+050F 8F 42 F2   MOV     $42,#$F2      ; volume left
+0512 E4 87      MOV     A,$87         ; frequency low
+0514 28 F0      AND     A,#$F0        ; and freq low w %11110000
+0516 C4 F3      MOV     $F3,A         ; put frequency low into pitch of voice4
+0518 8F 43 F2   MOV     $43,#$F2      ; select voice 4, pitch high
+051B FA 88 F3   MOV     $88<d>,$F3<s> ; put frequency hi into pitchhi of voice4
+051E 8F 40 F2   MOV     $40,#$F2      ; select voice 4 volume left
+0521 FA 8D F3   MOV     $8D<d>,$F3<s> ; put sustain/rel into voice 4 vol left
+0524 8F 41 F2   MOV     $41,#$F2      ; select volume right voice 4
+0527 FA 8D F3   MOV     $8D<d>,$F3<s> ; put sustain/rel into voice 4 vol right
+
+
+;------------------------------------------voice 3 emulation start here
+
+
+052A E4 92      MOV     A,$92         ; accu=$92=$d412=waveform voice 3
+052C 28 7F      AND     A,#$7F        ; mask out noise bit (bit 7)
+052E 68 24      CMP     A,#$24        ; sawtooth+ringmod selected?
+0530 D0 07      BNE     $0539         ; if no, goto 0539
+0532 8F 24 F2   MOV     $24,#$F2      ; voice 4, source number:
+0535 C4 F3      MOV     $F3,A         ; play sample #$24 = 36 = empty
+0537 2F 4A      BRA     $0583         ; we can see SAWT+RING is not implemented.
+0539 5D         MOV     X,A           ; X=a, note that noise (bit7)=0    ?!!
+053A 28 20      AND     A,#$20        ; is the sawtooth bit on?
+053C F0 16      BEQ     $0554         ; NO, goto 04f1
+053E E4 92      MOV     A,$92         ; get waveform of SIDvoice3 again
+0540 8F D8 72   MOV     $D8,#$72      ; set 0072/0073 to point to 09d8
+0543 8F 09 73   MOV     $09,#$73      ; 09d8 is sample #39
+0546 FA 91 7A   MOV     $91<d>,$7A<s> ; make a backup of pulse hi in $007a
+0549 3F 61 0B   CALL    $0B61         ; calculate sample #39
+054C 8F 24 F2   MOV     $24,#$F2      ; select DSPvoice2, source number:
+054F 8F 27 F3   MOV     $27,#$F3      ; set source number to #39, sample #39
+0552 2F 20      BRA     $0574         ; end of routine
+0554 7D         MOV     A,X           ; a=x=waveform SIDvoice3 and #$7f(bit7=0)
+0555 68 03      CMP     A,#$03        ; is the gatebit and sync on?
+0557 D0 09      BNE     $0562         ; no, end of routine
+0559 18 04 7B   OR      $04,#$7B      ; yes: select NOISE for this voice and...
+055C 4B 94      LSR     $94           ; change SID's sustain release bits from
+055E 4B 94      LSR     $94           ; ssssrrrr to 00ssssrr by shifting, thus
+                                      ; lowering the volume!
+0560 2F 21      BRA     $0583         ; end of routine
+0562 68 02      CMP     A,#$02        ; gatebit off, sync on?
+0564 D0 04      BNE     $056A         ; no, end of routine
+0566 60         CLRC                  ;
+0567 84 91      ADC     A,$91         ; add SID pulse hi to accu (which=01)
+0569 00         NOP                   ;
+056A 1C         ASL     A             ; multiply by 2
+056B 60         CLRC                  ;
+056C 84 90      ADC     A,$90         ; add SID's pulse low
+056E 5D         MOV     X,A           ; and store it in x register
+056F 8F 24 F2   MOV     $24,#$F2      ; select DSPvoice2, sample #
+0572 C4 F3      MOV     $F3,A         ; akku=sample #
+0574 8F 22 F2   MOV     $22,#$F2      ; select DSPvoice2, reg2: pitch low
+0577 E4 8E      MOV     A,$8E         ; SID frequency low
+0579 28 F0      AND     A,#$F0        ; is anded with %11110000, and gives....
+057B C4 F3      MOV     $F3,A         ; ...the value for DSPvoice2 pitch low
+057D 8F 23 F2   MOV     $23,#$F2      ; select DSP voice 2 reg3: pitch hi
+0580 FA 8F F3   MOV     $8F<d>,$F3<s> ; DSP pitch hi := SID freq hi
+0583 8F 20 F2   MOV     $20,#$F2      ; select DSP voice 2 reg 0: volume left
+0586 FA 94 F3   MOV     $94<d>,$F3<s> ; DSP vol left := SID Sustain/Release
+0589 8F 21 F2   MOV     $21,#$F2      ; select DSP voice 2 reg 1: volume right
+058C FA 94 F3   MOV     $94<d>,$F3<s> ; DSP vol right := SID Sustain/Release
+058F 8F 3D F2   MOV     $3D,#$F2      ; !!! DSP noise on/off register
+
+; now i understand! $7b is a ram memory location that is zeroed at the
+; beginning. Some bits of $7b will contain either 0 or 1 , depending if
+; a NOISE (random) waveform shall be played or not. These bits
+; are being set during the emulation routines, watch for  "or xx, $7b".
+
+
+0592 FA 7B F3   MOV     $7B<d>,$F3<s> ; set SID noise emulation if necessary
+0595 FA 92 F6   MOV     $92<d>,$F6<s> ; DSP f6=2142, send a signal to 65c816
+0598 D8 F7      MOV     $F7,X         ; send signal to 2143 / 65c816
+059A 8F 00 7B   MOV     $00,#$7B      ; clear noise emulation bits
+059D E4 F6      MOV     A,$F6         ; get a value from port 2142
+059F 68 40      CMP     A,#$40        ; is it $40 ?
+05A1 D0 15      BNE     $05B8         ; no, goto main loop
+05A3 C4 F6      MOV     $F6,A         ; send value #$40 back to 2142/65c816
+05A5 3F 4C 0A   CALL    $0A4C         ; init the sound chip registers!
+05A8 CD 00      MOV     X,#$00        ;
+05AA F5 9B 0B   MOV     A,$0B9B+X     ; move the reset routine to $ffc0
+05AD D5 C0 FF   MOV     $FFC0+X,A     ; (needless coz its ROM and should
+05B0 3D         INC     X             ; stay ROM anyway?!)
+05B1 C8 40      CMP     X,#$40        ; move $40 bytes
+05B3 D0 F5      BNE     $05AA         ;
+05B5 5F C0 FF   JMP     $FFC0         ; make sound chip reset.
+05B8 5F 48 04   JMP     $0448         ; main endless loop here
+
+;-------------------------------------------------------------------------
+;-------------------------------------------------------------------------
+;------------------------THE SAMPLE DATA----------------------------------
+;-------------------------------------------------------------------------
+;-------------------------------------------------------------------------
+
+; Here is the data area where all the samples start. They are grouped to-
+; gether in groups of nine bytes, where the first byte contains header
+; information, which is, in the following cases, either $b0 or $b3.
+; It is $b0 all the time at the start of each sample, and $b3 to indicate
+; that it is the last 9-byte-group of sample data.
+; I dont know too much myself about the samples, so look up your manual
+; will you  :)
+
+; take note, below you will find sample 5 , sample 7, sample 9 etc up to
+; sample 35 (giving 15 samples) and the difference between them is the
+; amount of "$88" sample values instead of "$77" sample values. If you
+; look at them you will easily see how each sample gets more and more
+; $88 bytes instead of $77 bytes. The meaning ? I dunno.  :-)
+
+
+;------------------------------------------------------------------
+; Reassembly work (c) Antitrack Oct-17-1994
+;------------------------------------------------------------------
+
+
+
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+
+
+; 05bb is sample 5
+05BB                                               B0   ....=.@.._.._H..
+05BC  77 77 77 77 77 77 77 77-B3 77 77 77 77 77 77 77   wwwwwwww.wwwwwww
+05CC  77
+
+
+; 05cd is sample #7
+05cd     B0 88 77 77 77 77 77-77 77 B3 77 77 77 77 77   w..wwwwwww.wwwww
+05DC  77 77 77
+
+
+; 05df is sample #9
+05df           B0 88 88 77 77-77 77 77 77 B3 77 77 77   www...wwwwww.www
+05EC  77 77 77 77 77
+
+
+; 05f1 is sample #11
+05f1                 B0 88 88-88 77 77 77 77 77 B3 77   wwwww....wwwww.w
+05FC  77 77 77 77 77 77 77
+
+; 0603 is sample #13
+0603                       B0-88 88 88 88 77 77 77 77   wwwwwww.....wwww
+060C  B3 77 77 77 77 77 77 77-77
+
+; 0615 is sample #15
+0615                             B0 88 88 88 88 88 77   .wwwwwwww......w
+061C  77 77 B3 77 77 77 77 77-77 77 77
+
+; 0627 is sample #17
+0627                                   B0 88 88 88 88   ww.wwwwwwww.....
+062C  88 88 77 77 B3 77 77 77-77 77 77 77 77
+
+; 0639 is sample #19
+0639                                         B0 88 88   ..ww.wwwwwwww...
+063C  88 88 88 88 88 77 B3 77-77 77 77 77 77 77 77
+
+; 064b is sample #21
+064b                                               B0   .....w.wwwwwwww.
+064C  88 88 88 88 88 88 88 88-B3 77 77 77 77 77 77 77   .........wwwwwww
+065C  77
+
+; 065d is sample #23
+065d     B0 88 88 88 88 88 88-88 88 B3 88 77 77 77 77   w...........wwww
+066C  77 77 77
+
+; sample #25
+066f           B0 88 88 88 88-88 88 88 88 B3 88 88 77   www............w
+067C  77 77 77 77 77
+
+; sample#27
+0681                 B0 88 88-88 88 88 88 88 88 B3 88   wwwww...........
+068C  88 88 77 77 77 77 77
+
+; sample#29
+0693                       B0-88 88 88 88 88 88 88 88   ..wwwww.........
+069C  B3 88 88 88 88 77 77 77-77
+
+; sample#31
+06a5                             B0 88 88 88 88 88 88   .....wwww.......
+06AC  88 88 B3 88 88 88 88 88-77 77 77
+
+; sample#33
+06b7                                   B0 88 88 88 88   ........www.....
+06BC  88 88 88 88 B3 88 88 88-88 88 88 77 77
+
+; sample#35
+06c9                                         B0 88 88   ...........ww...
+06CC  88 88 88 88 88 88 B3 88-88 88 88 88 88 88 77
+
+;------------------------------------------------------------------------
+; this was sample 5 to sample 35, a kinda important sequence of samples or so
+; i think it might emulate one effect only but dont ask which one.
+; -----------------------------------------------------------------------
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+
+
+
+; 06db is sample #3
+06db                                               B0   ..............w.
+06DC  00 11 22 33 44 55 66 77-B3 88 99 AA BB CC DD EE   .."3DUfw........
+06EC  FF
+
+
+; 06ed is the sample #1 data according to the table at $09fd...
+06ed     B0 01 23 45 67 65 43-21 0F B3 FE DC BA 98 89   ...#EgeC!.......
+06FC  AB CD EF
+
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+
+; here is sample 4 up to sample 34. very much like in sample 5 to sample
+; 35, the samples here are quite similar to each other. This is another
+; indicator for my theory that sample 4 up to sample 35 (31 samples alltoge-
+; ther!) are being used to emulate one effect only.  (Or one waveform, or
+; one  WHATEVER. I will still have to figure....)
+
+; 06ff is sample #4
+06ff           B0 77 77 77 77-77 77 77 77 B0 77 77 77   ....wwwwwwww.www
+070C  77 77 77 77 77 B0 77 77-77 77 77 77 77 77 B3 77   wwwww.wwwwwwww.w
+071C  77 77 77 77 77 77 77
+
+
+; 0723 is sample #6
+0723                       B0-88 88 77 77 77 77 77 77   wwwwwww...wwwwww
+072C  B0 77 77 77 77 77 77 77-77 B0 77 77 77 77 77 77   .wwwwwwww.wwwwww
+073C  77 77 B3 77 77 77 77 77-77 77 77
+
+; 0747 is sample #8
+0747                                   B0 88 88 88 88   ww.wwwwwwww.....
+074C  77 77 77 77 B0 77 77 77-77 77 77 77 77 B0 77 77   wwww.wwwwwwww.ww
+075C  77 77 77 77 77 77 B3 77-77 77 77 77 77 77 77
+
+; 076b is sample #10
+076b                                               B0   wwwwww.wwwwwwww.
+076C  88 88 88 88 88 88 77 77-B0 77 77 77 77 77 77 77   ......ww.wwwwwww
+077C  77 B0 77 77 77 77 77 77-77 77 B3 77 77 77 77 77   w.wwwwwwww.wwwww
+078C  77 77 77
+
+; 078f is sample #12
+078f           B0 88 88 88 88-88 88 88 88 B0 77 77 77   www..........www
+079C  77 77 77 77 77 B0 77 77-77 77 77 77 77 77 B3 77   wwwww.wwwwwwww.w
+07AC  77 77 77 77 77 77 77
+
+
+; 07b3 is sample #14
+07b3                       B0-88 88 88 88 88 88 88 88   wwwwwww.........
+07BC  B0 88 88 77 77 77 77 77-77 B0 77 77 77 77 77 77   ...wwwwww.wwwwww
+07CC  77 77 B3 77 77 77 77 77-77 77 77
+
+
+; 07d7 is sample #16
+07d7                                   B0 88 88 88 88   ww.wwwwwwww.....
+07DC  88 88 88 88 B0 88 88 88-88 77 77 77 77 B0 77 77   .........wwww.ww
+07EC  77 77 77 77 77 77 B3 77-77 77 77 77 77 77 77
+
+; 07fb is sample #18
+07fb                                               B0   wwwwww.wwwwwwww.
+07FC  88 88 88 88 88 88 88 88-B0 88 88 88 88 88 88 77   ...............w
+080C  77 B0 77 77 77 77 77 77-77 77 B3 77 77 77 77 77   w.wwwwwwww.wwwww
+081C  77 77 77
+
+; 081f is sample #20
+081f           B0 88 88 88 88-88 88 88 88 B0 88 88 88   www.............
+082C  88 88 88 88 88 B0 77 77-77 77 77 77 77 77 B3 77   ......wwwwwwww.w
+083C  77 77 77 77 77 77 77
+
+; 0843 is sample #22
+0843                       B0-88 88 88 88 88 88 88 88   wwwwwww.........
+084C  B0 88 88 88 88 88 88 88-88 B0 88 88 77 77 77 77   ............wwww
+085C  77 77 B3 77 77 77 77 77-77 77 77
+
+; 0867 is sample #24
+0867                                   B0 88 88 88 88   ww.wwwwwwww.....
+086C  88 88 88 88 B0 88 88 88-88 88 88 88 88 B0 88 88   ................
+087C  88 88 77 77 77 77 B3 77-77 77 77 77 77 77 77
+
+; 088b is sample #26
+088b                                               B0   ..wwww.wwwwwwww.
+088C  88 88 88 88 88 88 88 88-B0 88 88 88 88 88 88 88   ................
+089C  88 B0 88 88 88 88 88 88-77 77 B3 77 77 77 77 77   ........ww.wwwww
+08AC  77 77 77
+
+; 08af is sample #28
+08af           B0 88 88 88 88-88 88 88 88 B0 88 88 88   www.............
+08BC  88 88 88 88 88 B0 88 88-88 88 88 88 88 88 B3 77   ...............w
+08CC  77 77 77 77 77 77 77
+
+; 08d3 is sample #30
+08d3                       B0-88 88 88 88 88 88 88 88   wwwwwww.........
+08DC  B0 88 88 88 88 88 88 88-88 B0 88 88 88 88 88 88   ................
+08EC  88 88 B3 88 88 77 77 77-77 77 77
+
+
+; 08f7 is sample #32
+08f7                                   B0 88 88 88 88   .....wwwwww.....
+08FC  88 88 88 88 B0 88 88 88-88 88 88 88 88 B0 88 88   ................
+090C  88 88 88 88 88 88 B3 88-88 88 88 77 77 77 77
+
+; 091b  is sample #34
+091b                                               B0   ...........wwww.
+091C  88 88 88 88 88 88 88 88-B0 88 88 88 88 88 88 88   ................
+092C  88 B0 88 88 88 88 88 88-88 88 B3 88 88 88 88 88   ................
+093C  88 77 77
+
+
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+
+
+
+; 093f is sample #2...
+
+               B0 00 00 11 11-22 22 33 33 B0 44 44 55   .ww.....""33.DDU
+094C  55 66 66 77 77 B0 88 88-99 99 AA AA BB BB B3 CC   Uffww...........
+095C  CC DD DD EE EE FF FF
+
+
+; 0963 seems to be sample 0.
+
+                           B0-00 11 22 33 44 55 66 77   .........."3DUfw
+096C  B0 77 66 55 44 33 22 11-00 B0 FF EE DD CC BB AA   .wfUD3".........
+097C  99 88 B3 88 99 AA BB CC-DD EE FF 03
+
+
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+;------------------------------------------------------------------
+; Reassembly work (c) Antitrack Oct-17-1994
+;------------------------------------------------------------------
+
+
+
+0987 is either sample #36 or i am mistaken?  :-)
+0987                                      00 00 00 00   ................
+098C  00 00 00 00
+
+; well this IS sample 36 and should be sawtooth+ring modulation. Something
+; that *is* actually very rarely used together on the 64, coz it sounds
+; so faint that its nearly not there (if you ever tried it on the 64).
+;
+
+
+
+0990 is either sample #37 . it is getting calculated in realtime.... (voice1)
+0990              00 00 00 00-00 00 00 00 00 00 00 00   ................
+099C  00 00 00 00 00 00 00 00-00 00 00 00 00 00 00 00   ................
+09AC  00 00 00 00 00 00 00 00-
+
+09b4 seems to be sample #38. its real values are being calculated in realtime
+; it is used to emulate the 64's voice 2.
+09b4                          00 00 00 00 00 00 00 00   ................
+09BC  00 00 00 00 00 00 00 00-00 00 00 00 00 00 00 00   ................
+09CC  00 00 00 00 00 00 00 00-00 00 00 00
+
+09d8 is sample #39. calculated in realtime, used for voice3 emulation.
+09d8                                      00 00 00 00   ................
+09DC  00 00 00 00 00 00 00 00-00 00 00 00 00 00 00 00   ................
+09EC  00 00 00 00 00 00 00 00-00 00 00 00 00 00 00 00   ................
+
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+;------------------------------------------------------------------
+; Reassembly work (c) Antitrack Oct-17-1994
+;------------------------------------------------------------------
+
+
+
+; let us do a little summary of the samples here. If you recall,
+; sample 0,1,2,3 seem to be independent. Sample 4 up to sample 35 (31 samples)
+; are very similar to each other. Sample 36 is not being
+; used for the obvious reason that it consists of zerobytes only and doesn't
+; make too much sense.
+
+; Sample 37, 38 and 39 are being calculated in realtime before being played.
+
+; My guess is that samples 0,1,2,3 emulate noise, sawtooth, pulse and
+; triangle, and the rest of the samples (31 of them, sample4 to sample35)
+; are trying to emulate the ring modulation, or the sync modulation, or
+; some special effect like that.
+
+; Well lets look again at sample 0, 1, 2, 3 here:
+
+; 0963 seems to be sample 0.
+
+                           B0-00 11 22 33 44 55 66 77   .........."3DUfw
+096C  B0 77 66 55 44 33 22 11-00 B0 FF EE DD CC BB AA   .wfUD3".........
+097C  99 88 B3 88 99 AA BB CC-DD EE FF 03
+
+; 06ed is the sample #1..
+06ed     B0 01 23 45 67 65 43-21 0F B3 FE DC BA 98 89   ...#EgeC!.......
+06FC  AB CD EF
+
+; 093f is sample #2...
+
+               B0 00 00 11 11-22 22 33 33 B0 44 44 55   .ww.....""33.DDU
+094C  55 66 66 77 77 B0 88 88-99 99 AA AA BB BB B3 CC   Uffww...........
+095C  CC DD DD EE EE FF FF
+
+; 06db is sample #3
+06db                                               B0   ..............w.
+06DC  00 11 22 33 44 55 66 77-B3 88 99 AA BB CC DD EE   .."3DUfw........
+06EC  FF
+
+; damn they are similar to each other too! ..... ?? Dunno what to say
+; about it. If thats one effect only too, then the SID got two
+; effects only, yea rite?  ;-)
+; I am not getting smart out of it...at the moment. Sorry....
+
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+
+
+; here at 09fc is the pointer table for the samples. they point to the
+; start of each sample.
+
+
+09FC  63 09 ED 06 3F 09 DB 06-FF 06 BB 05 23 07 CD 05   c...?.......#...
+0A0C  47 07 DF 05 6B 07 F1 05-8F 07 03 06 B3 07 15 06   G...k...........
+0A1C  D7 07 27 06 FB 07 39 06-1F 08 4B 06 43 08 5D 06   ..'...9...K.C.].
+0A2c  67 08 6F 06 8B 08 81 06-AF 08 93 06 D3 08 A5 06   g.o.............
+0A3c  F7 08 B7 06 1B 09 C9 06-87 09 90 09 B4 09 D8 09   ................
+
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+
+;------------------------------------------------------------------
+; Reassembly work (c) Antitrack Oct-17-1994
+;------------------------------------------------------------------
+
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+;--------------------------------------------------------------------------
+
+;
+;  init all DSP sound chip registers
+;
+
+0A4C CD 00      MOV     X,#$00        ; ***init dsp registers***
+0A4E 60         CLRC                  ; clear carry
+0A4F 7D         MOV     A,X           ; a=x=0
+0A50 C4 F2      MOV     $F2,A         ; dsp register 0, VOL Left voice 0
+0A52 8F 00 F3   MOV     $00,#$F3      ; dsp register VALUE, e.g VOL left = 0
+0A55 88 10      ADC     A,#$10        ; a= 10 : dsp register $10, vol left
+0A57 C4 F2      MOV     $F2,A         ; ../of voice 1  !
+0A59 8F 00 F3   MOV     $00,#$F3      ; voice 1 VOL left = 0
+0A5C 88 10      ADC     A,#$10        ; a= 10 : dsp register $20, vol left
+0A5E C4 F2      MOV     $F2,A         ; ../of voice 2  !
+0A60 8F 00 F3   MOV     $00,#$F3      ; voice 2 VOL left = 0
+0A63 88 10      ADC     A,#$10        ; a= 10 : dsp register $30, vol left
+0A65 C4 F2      MOV     $F2,A         ; ../of voice 3  !
+0A67 8F 00 F3   MOV     $00,#$F3      ; voice 3 VOL left = 0
+0A6A 88 10      ADC     A,#$10        ; a= 10 : dsp register $40, vol left
+0A6C C4 F2      MOV     $F2,A         ; ../of voice 4  !
+0A6E 8F 00 F3   MOV     $00,#$F3      ; voice 4 VOL left = 0
+0A71 88 10      ADC     A,#$10        ; a= 10 : dsp register $50, vol left
+0A73 C4 F2      MOV     $F2,A         ; ../of voice 5  !
+0A75 8F 00 F3   MOV     $00,#$F3      ; voice 5 VOL left = 0
+0A78 88 10      ADC     A,#$10        ; a= 10 : dsp register $60, vol left
+0A7A C4 F2      MOV     $F2,A         ; ../of voice 6  !
+0A7C 8F 00 F3   MOV     $00,#$F3      ; voice 6 VOL left = 0
+0A7F 88 10      ADC     A,#$10        ; a= 10 : dsp register $70, vol left
+0A81 C4 F2      MOV     $F2,A         ; ../of voice 7  !
+0A83 8F 00 F3   MOV     $00,#$F3      ; voice 7 VOL left = 0
+0A86 3D         INC     X             ; since this is a loop , we hereby
+0A87 C8 0A      CMP     X,#$0A        ; clear all DSP registers (00-09)
+0A89 D0 C4      BNE     $0A4F         ; of all voices!
+0A8B CD 0C      MOV     X,#$0C        ;
+0A8D 60         CLRC                  ;
+0A8E 7D         MOV     A,X           ; akku=x=$0c
+0A8F C4 F2      MOV     $F2,A         ;
+0A91 8F 00 F3   MOV     $00,#$F3      ; clear $0c, 0d, 0e, 0f
+0A94 88 10      ADC     A,#$10        ;
+0A96 C4 F2      MOV     $F2,A         ;
+0A98 8F 00 F3   MOV     $00,#$F3      ; clear $1c, 1d, 1e, 1f
+0A9B 88 10      ADC     A,#$10        ;
+0A9D C4 F2      MOV     $F2,A         ;
+0A9F 8F 00 F3   MOV     $00,#$F3      ; clear $2c, 2d, 2e, 2f
+0AA2 88 10      ADC     A,#$10        ;
+0AA4 C4 F2      MOV     $F2,A         ;
+0AA6 8F 00 F3   MOV     $00,#$F3      ; clear $3c, 3d, 3e, 3f
+0AA9 88 10      ADC     A,#$10        ;
+0AAB C4 F2      MOV     $F2,A         ;
+0AAD 8F 00 F3   MOV     $00,#$F3      ; clear $4c, 4d, 4e, 4f
+0AB0 88 10      ADC     A,#$10        ;
+0AB2 C4 F2      MOV     $F2,A         ;
+0AB4 8F 00 F3   MOV     $00,#$F3      ; clear $5c, 5d, 5e, 5f
+0AB7 88 10      ADC     A,#$10        ;
+0AB9 C4 F2      MOV     $F2,A         ;
+0ABB 8F 00 F3   MOV     $00,#$F3      ; clear $6c, 6d, 6e, 6f
+0ABE 88 10      ADC     A,#$10        ;
+0AC0 C4 F2      MOV     $F2,A         ;
+0AC2 8F 00 F3   MOV     $00,#$F3      ; clear $7c, 7d, 7e, 7f
+0AC5 3D         INC     X             ;
+0AC6 C8 10      CMP     X,#$10        ;
+0AC8 D0 C4      BNE     $0A8E         ; loop.
+0ACA 8F 3D F2   MOV     $3D,#$F2      ; register 3d: noise on/off.
+0ACD 8F 00 F3   MOV     $00,#$F3      ; in this case: noise for all voices off
+0AD0 8F 4D F2   MOV     $4D,#$F2      ; register 4d: echo on/off.
+0AD3 8F 00 F3   MOV     $00,#$F3      ; in this case: echo for all voices off
+0AD6 8F 6C F2   MOV     $6C,#$F2      ; reg 6c: ECEN: d5=0 means echo enable,
+0AD9 8F 20 F3   MOV     $20,#$F3      ; so d5=1 means echo disable, yea rite?
+0ADC 8F 0C F2   MOV     $0C,#$F2      ; main volume left = 7f
+0ADF 8F 7F F3   MOV     $7F,#$F3      ;
+0AE2 8F 1C F2   MOV     $1C,#$F2      ; main volume right = 7f
+0AE5 8F 7F F3   MOV     $7F,#$F3      ;
+0AE8 8F 5D F2   MOV     $5D,#$F2      ; this is tricky, its called "offset
+0AEB 8F 02 F3   MOV     $02,#$F3      ; address of source directory".
+
+; Basically it means that we have an important table at $0200 in this case
+; and i will describe the table: each table entry at $0200 contains a pointer
+; to the sampled data that your voice should play! The sampled data must be
+; in a special format called "BRR" (bit rate reductio) format, which I will
+; describe whenever we discuss the samples .
+
+0AEE 8F 30 F2   MOV     $30,#$F2      ;  voice 3 volume left = 7f
+0AF1 8F 7F F3   MOV     $7F,#$F3      ;
+0AF4 8F 31 F2   MOV     $31,#$F2      ;  voice 3 volume right = 7f
+0AF7 8F 7F F3   MOV     $7F,#$F3      ;
+0AFA 8F 35 F2   MOV     $35,#$F2      ;  ADSR(1) voice 3 = 67  (bit7=0 !!!)
+
+; bit7 = 0 of adsr(1) is very important. it tells us that the GAIN byte
+; gets operable. The gain byte is byte 7 of each voice, which will be used
+; soon... watch out... :-) Anyway I dont feel like typing in so much , but,
+
+            bit7  bit6  bit5  bit4  bit3  bit2  bit1  bit0
+
+ADSR(1) :   GAIN  DR2   DR1   DR0   AR3   AR2   AR1   AR0
+ADSR(2) :   SL2   SL1   SL0   SR4   SR3   SR2   SR1   SR0
+
+AR3-0 is Attack time,  DR0-2 is Decay time, SL0-2 Sustain low(?), SR0-4
+is Sustain/Release. (Hopefully. You gotta play around with these for quite
+a while till you get results, believe me...)
+
+
+0AFD 8F 67 F3   MOV     $67,#$F3      ;   67=01100111; DR=110, AR=0111
+0B00 8F 36 F2   MOV     $36,#$F2      ;  ADSR(2) voice 3 = 18
+0B03 8F 18 F3   MOV     $18,#$F3      ;  18=00011000  ratio=000, SR=11000=180ms
+0B06 8F 37 F2   MOV     $37,#$F2      ;  voice 3 gain!
+0B09 8F 7F F3   MOV     $7F,#$F3      ;  the GAIN value is set to %1111111
+
+; Now this was the gain stuff. Since bit 7 of reg 7, voice 3, is zero, it means
+; "direct designation": the value of GAIN is set directly according to
+; the rest of the bits in this byte. Thus, all to 1. Thus, maximum GAIN. What
+; ever GAIN was.
+
+0B0C 8F 40 F2   MOV     $40,#$F2      ; volume left voice 4 = 7f
+0B0F 8F 7F F3   MOV     $7F,#$F3      ;
+0B12 8F 41 F2   MOV     $41,#$F2      ; volume rite voice 4 = 7f
+0B15 8F 7F F3   MOV     $7F,#$F3      ;
+0B18 8F 45 F2   MOV     $45,#$F2      ; adsr voice 4 same like voice 3
+0B1B 8F 67 F3   MOV     $67,#$F3      ; adsr voice 4 same like voice 3
+0B1E 8F 46 F2   MOV     $46,#$F2      ; adsr voice 4 same like voice 3
+0B21 8F 18 F3   MOV     $18,#$F3      ; adsr voice 4 same like voice 3
+0B24 8F 47 F2   MOV     $47,#$F2      ; gain voice 4 7f , same like voice 3
+0B27 8F 7F F3   MOV     $7F,#$F3      ;
+0B2A 8F 20 F2   MOV     $20,#$F2      ; volume voice 2 left = 7f
+0B2D 8F 7F F3   MOV     $7F,#$F3      ;
+0B30 8F 21 F2   MOV     $21,#$F2      ; volume voice 2 rite = 7f (max, eh)
+0B33 8F 7F F3   MOV     $7F,#$F3      ;
+0B36 8F 25 F2   MOV     $25,#$F2      ; adsr voice 2 same like voice 3
+0B39 8F 67 F3   MOV     $67,#$F3      ; adsr voice 2 same like voice 3
+0B3C 8F 26 F2   MOV     $26,#$F2      ; adsr voice 2 same like voice 3
+0B3F 8F 18 F3   MOV     $18,#$F3      ; adsr voice 2 same like voice 3
+0B42 8F 27 F2   MOV     $27,#$F2      ; gain voice 4 same like voice 3
+0B45 8F 7F F3   MOV     $7F,#$F3      ; ----- end of DSP init
+0B48 8F 00 7C   MOV     $00,#$7C      ; clear mem 7c-7f of spc RAM memory
+0B4B 8F 00 7D   MOV     $00,#$7D      ;
+0B4E 8F 00 7E   MOV     $00,#$7E      ;
+0B51 8F 00 7F   MOV     $00,#$7F      ;
+0B54 8F 6C F2   MOV     $6C,#$F2      ; DSP register 6c:
+0B57 8F 38 F3   MOV     $38,#$F3      ;
+
+; 38: = %01101100  bit 7: soft reset is off, DSP ready to play or so
+                       6: =1  "MUTE" is turned on
+                       5: =1  ECEN (echo enable)   =1, means echo disabled
+                       4-0: 01100: Noise clock generator speed. Impessive, huh
+
+
+
+0B5A 8F 4C F2   MOV     $4C,#$F2      ; DSP register 4c, KEY ON
+0B5D 8F 1C F3   MOV     $1C,#$F3      ;
+
+; Now this is the important part, its the KEY ON thingie. :-) $1c is
+; binary %11100 and what does this tell you? It tells you that they use voice
+; 2, 3 and 4 for the emulation. Oh yeah! :)
+
+0B60 6F         RET                   ;
+
+;-------------------------------------------------------------------------
+;-------------------------------------------------------------------------
+;-------------------------------------------------------------------------
+
+The following routine calculates a new sample and puts it at sample #37's
+memory location (0990-09b4), or into sample #38's memory location if
+we are currently calculating for voice2, or into sample #39's memory location
+if we are calculating the data for voice3.
+
+The calculations are based on whatever waveform bits are set or not.
+
+
+0B61 8F FC 78   MOV     $FC,#$78      ; 78/79 points to 09fc which is the
+0B64 8F 09 79   MOV     $09,#$79      ; array of sample pointers
+0B67 5D         MOV     X,A           ; x=a=actual waveform
+0B68 5C         LSR     A             ; shift waveform left 4 bits
+0B69 5C         LSR     A             ; noise, pulse, sawtooth and triangle
+0B6A 5C         LSR     A             ; will now be at bit 3, bit 2, bit 1 and
+0B6B 5C         LSR     A             ; bit 0 of the akku
+0B6C C4 7C      MOV     $7C,A         ; 007c now gets the val of akku
+0B6E 7D         MOV     A,X           ; akku gets old val back
+0B6F 28 03      AND     A,#$03        ; check for bit 0/1: bit0:gate on/off,
+0B71 60         CLRC                  ; ...bit1: sync modulation bit
+0B72 84 7A      ADC     A,$7A         ; we add 00-03 (depending if the gate
+                                      ; and the sync bit are set) to the pulse
+                                      ; hi value.
+
+0B74 1C         ASL     A             ; and multiply by 4.
+0B75 1C         ASL     A             ; this value now is the index of which
+0B76 FD         MOV     Y,A           ; sample pointer to grab from the sample
+0B77 F7 78      MOV     A,[$78]+Y     ; pointer table!
+0B79 C4 74      MOV     $74,A         ; 74/75=pointer to acual sample
+0B7B FC         INC     Y             ; actual sample=[samplearray+index]
+0B7C F7 78      MOV     A,[$78]+Y     ;
+0B7E C4 75      MOV     $75,A         ;
+0B80 E4 7C      MOV     A,$7C         ; noise/pulse/saw/triangl  (bits3-0)
+                                      ; this command seems to be useless since
+                                      ; the accu soon gets a completely new
+                                      ; value.
+0B82 8D 00      MOV     Y,#$00        ;
+0B84 F7 78      MOV     A,[$78]+Y     ; put address of sample 0 into 76/77
+0B86 C4 76      MOV     $76,A         ;
+0B88 FC         INC     Y             ;
+0B89 F7 78      MOV     A,[$78]+Y     ;
+0B8B C4 77      MOV     $77,A         ;
+0B8D 8D 00      MOV     Y,#$00        ;
+0B8F F7 74      MOV     A,[$74]+Y     ;the 1stbyte of the actual sample 74/75...
+0B91 37 76      AND     A,[$76]+Y     ;..is ANDED w/ the first byte of sample 0
+0B93 D7 72      MOV     [$72]+Y,A     ;the RESULTING SAMPLE is being moved
+0B95 FC         INC     Y             ;to sample 37+x (72/73 point to it, they
+0B96 AD 24      CMP     Y,#$24        ;point to 0990 ....)
+                                      ; "sample 37+x" where x is voice number
+                                      ; -1 of the 64
+
+; let me sum up and recall here what happened. An *acutal sample* was being
+; chosen and calculated from the waveform bits noise/pulse/saw and triangle,
+; as well as from the wave bits SYNC and GATE. A pointer, 74/75, is set to this
+; calculated actual sample. Another pointer, 72/73, points to the very first
+; sample always. The *actual sample*'s bytes are ANDed with all the bytes from
+; sample 0, the resulting sample is located at sample #37/8/9's memory location,
+; from 0990-09b4 ($24 bytes as the loop says).
+
+; Its my guess that this resulting sample #37/8/9 is gonna be played sooner or
+; later!  :-)
+
+
+
+0B98 D0 F5      BNE     $0B8F         ;
+0B9A 6F         RET                   ;
+
+;-------------------------------------------------------------------------
+;-------------------------------------------------------------------------
+;-------------------------------------------------------------------------
+
+
+; this routine is a copy of the SPC700's RESET routine, which was discussed
+; in the famidev development group intensely already.
+; It basically gets the SPC data from the CPU (65c816)'s RAM into the
+; SPC700's ram.
+
+
+0B9B CD EF      MOV     X,#$EF        ;  normal start is $ffc0
+0B9D BD         MOV     SP,X          ;
+0B9E E8 00      MOV     A,#$00        ;
+0BA0 C6         MOV     (X),A         ;
+0BA1 1D         DEC     X             ;
+0BA2 D0 FC      BNE     $0BA0         ;
+0BA4 8F AA F4   MOV     $AA,#$F4      ;
+0BA7 8F BB F5   MOV     $BB,#$F5      ;
+0BAA 78 CC F4   CMP     $CC,#$F4      ;
+0BAD D0 FB      BNE     $0BAA         ;
+0BAF 2F 19      BRA     $0BCA         ;
+0BB1 EB F4      MOV     Y,$F4         ;
+0BB3 D0 FC      BNE     $0BB1         ;
+0BB5 7E F4      CMP     Y,$F4         ;
+0BB7 D0 0B      BNE     $0BC4         ;
+0BB9 E4 F5      MOV     A,$F5         ;
+0BBB CB F4      MOV     $F4,Y         ;
+0BBD D7 00      MOV     [$00]+Y,A     ;
+0BBF FC         INC     Y             ;
+0BC0 D0 F3      BNE     $0BB5         ;
+0BC2 AB 01      INC     $01           ;
+0BC4 10 EF      BPL     $0BB5         ;
+0BC6 7E F4      CMP     Y,$F4         ;
+0BC8 10 EB      BPL     $0BB5         ;
+0BCA BA F6      MOVW    YA,$F6        ;
+0BCC DA 00      MOVW    $00,YA        ;
+0BCE BA F4      MOVW    YA,$F4        ;
+0BD0 C4 F4      MOV     $F4,A         ;
+0BD2 DD         MOV     A,Y           ;
+0BD3 5D         MOV     X,A           ;
+0BD4 D0 DB      BNE     $0BB1         ;
+0BD6 1F 00 00   JMP     [$0000+X]     ;
+0BD9 C0         DI                    ;   reset vector
+0BDA FF         STOP                  ;
+
+
+;------------------------------------------------------------------
+; Reassembly work (c) Antitrack Oct-17-1994
+;------------------------------------------------------------------
+
+

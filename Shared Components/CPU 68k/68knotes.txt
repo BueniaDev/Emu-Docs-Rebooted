@@ -1,0 +1,100 @@
+
+
+                  ----------------------------------------
+                     68000 Undocumented Behavior Notes
+                    by Bart Trzynadlowski, June 27, 2001
+                  ----------------------------------------
+
+
+---------
+  About
+---------
+
+This purpose of this writing is to document some of the features of Motorola's
+68000 processor which are not described elsewhere. Any information which you
+can contribute would be welcomed!
+
+All of my testing was conducted on the MC68EC000 processor found inside the
+Sega Saturn. I used sat68kdb (http://trzy.overclocked.org/saturn), a debugger
+written specifically to allow step-by-step execution of code on the MC68EC000.
+I also verified my results on an original Sega Genesis. This does not mean,
+however, that this document is error-free. If you spot any, let me know!
+
+Thanks to James Forshaw for help with Saturn coding, and Charles MacDonald for
+running my test programs on a real Genesis.
+
+My contact details:
+
+    Bart Trzynadlowski
+    Email:  trzy@mailandnews.com
+    WWW:    http://trzy.overclocked.org
+
+NOTE: Please credit me if you use any information presented here. I invested
+much effort in obtaining this information, and some acknowledgement would be
+nice.
+
+
+---------------------------------------------------
+  ABCD, SBCD, and NBCD Undocumented Flag Behavior
+---------------------------------------------------
+
+The N and V flags for ABCD, SBCD, and NBCD are described as "undocumented" by
+Motorola's official programming manuals.
+
+The N flag is set if the MSB (most significant bit) of the result is 1 and
+cleared if it is 0.
+
+ABCD's V flag is trickier. Let us refer to the non-BCD result of the added
+operands as the "unadjusted result", and to the BCD-adjusted result as the
+"adjusted result." When the MSB of the unadjusted result is 0, and becomes 1
+in the adjusted result, the V flag is set. Otherwise (if it goes from 1 to 0,
+1 to 1, or 0 to 0), it is cleared.
+
+Here are some examples:
+
+    Operands        Unadjusted Result   Adjusted Result     V Flag
+    --------------------------------------------------------------
+    0x40 + 0x40     0x80                0x80                0
+    0x40 + 0x41     0x81                0x81                0
+    0x40 + 0x3F     0x7F                0x85                1
+    0x40 + 0x3A     0x7A                0x80                1
+    0x70 + 0x10     0x80                0x80                0
+    0x78 + 0x02     0x7A                0x80                1
+    0x0A + 0x70     0x7A                0x80                1
+    0x99 + 0x01     0x9A                0x01*               0
+
+    * ABCD adds with the X flag
+
+I realize some of the operands were not valid BCD numbers, but it does not
+matter. The table helps illustrate how the V flag works. Notice how the change
+of the MSB from 0 to 1 causes the V flag to be set.
+
+For SBCD and NBCD, the behavior is almost the same, except that the V flag is
+set if the MSB changes from 1 to 0. Otherwise (if it goes from 0 to 1, 1 to 1,
+or 0 to 0) is is cleared. Some examples are shown below.
+
+    Operands        Unadjusted Result   Adjusted Result     V Flag
+    --------------------------------------------------------------
+    0x67 - 0x91     0xD6                0x75                1
+    0x67 - 0xF1     0x76                0x15                0
+    0x90 - 0x0F     0x81                0x7B                1
+    0x0F - 0x10     0xFF                0x9F                0
+    0x0F - 0xA0     0x6F                0x0E                0
+
+
+----------------------------------
+  CHK Undocumented Flag Behavior
+----------------------------------
+
+The Z, V, and C flags are undocumented for the CHK instruction.
+
+The Z flag is set if the register operand (the second operand; not the
+effective address operand) is 0. Otherwise, it is cleared. With the 68000,
+only word-sized operands are allowed, so only the lower word matters when
+checking for the Z condition.
+
+The V and C flags are always cleared. In my tests, I have never been able to
+set either of them. Confirmation on wether or not I am correct would be nice.
+
+CHK undocumented flag calculation is not affected by wether or not a CHK
+exception occurs; the flags are calculated before the exception occurs.

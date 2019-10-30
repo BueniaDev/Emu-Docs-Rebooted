@@ -1,0 +1,134 @@
+Date: Tue, 2 Mar 93 08:10:28 CST
+From: nhowland@centurion.ksu.ksu.edu (Neal Patrick Howland)
+To: sysrick@starbase.spd.louisville.edu
+Subject: Genesis joystick pinouts
+ 
+Yes folks!  It is the much requested Gensis joystick pinout information!!!
+<much applause>
+ 
+First some background info:  The chip inside the controller is a 74HC157.  This
+is a high-speed cmos quad 2-line to 1-line multiplexer.  Basically how this
+works is there are two inputs ( A and B ) for every output ( Y ).  There are
+four groups like this.  There is one select signal for the whole chip.  When
+the select signal is low, the output ( Y ) is the same as input A.  When the
+select signal is high, the output Y is the same as input B.  The pinout for
+the chip is as follows:
+ 
+	Pin 1 - Select	Pin 16 - Vcc (+5V)
+	Pin 2 - 1A	Pin 15 - G (? must be low)
+	Pin 3 - 1B	Pin 14 - 4A
+	Pin 4 - 1Y	Pin 13 - 4B
+	Pin 5 - 2A	Pin 12 - 4Y
+	Pin 6 - 2B	Pin 11 - 3A
+	Pin 7 - 2Y	Pin 10 - 3B
+	Pin 8 - Gnd	Pin 9  - 3Y
+ 
+ 
+All the controls are done with switches.  Up is a switch, Down is a switch, 
+etc. Now, I will be refering to the output of these switches later on.  What 
+I mean is that the output is usually high, that is when the switch isn't pressed.  
+ 
+When the button is pushed, the output goes low.  This is accomplished by   
+connecting the output to +5V through a 10k resistor.  The button is then
+attached between the output and ground.  It looks like this:
+ 
+     +5V -----/\/\/------+--------- Output
+               10k       |
+                         |
+                /        |
+   Ground -----/  -------+
+              button
+              (normally open)
+ 
+For all of those who could actually decipher the above schematic, congratulations!
+ 
+ 
+I will now run down what lines from the plug are connected to what.
+The line numbers are determined as follows, looking straight at the plug on
+the front of the Genesis the numbers are:
+ 
+	1 2 3 4 5
+	 6 7 8 9
+ 
+  (For those of you who buy a joystick cable from radio shack the pin #'s to
+   wire colors are as follows: 1-black 2-brown 3-red 4-orange 5-get cup from bag
+sorry about that, lets start again  1-white 2-blue 3-green 4-brown 5-yellow
+6-orange 7-red 8-black 9-gray,  )
+ 
+anyway, line connections:
+ 
+Line 1 - Up output
+Line 2 - Down output    These are the only two direct connections
+Line 3 - Pin 4 of the chip    output 1Y
+Line 4 - Pin 7 of the chip    ouput 2Y
+Line 5 - This line carries in +5V.  It is connected to the +5V bus line.
+Line 6 - Pin 9 of the chip    output 3Y
+line 7 - Pin 1 of the chip  this carries in a select signal from the Genesis.
+                             This is a signal which varies rapidly and controls
+                             which input goes through the ouput
+Line 8 - Ground  This is connected to the Ground bus line.
+Line 9 - Pin 12 of the chip   output 4Y
+ 
+ 
+Now for the chips pin connections:
+ 
+Pin 1 - Line 7 (select)
+Pin 2 - Ground (1A)    don't ask me why they do this.  Maybe future expansion
+Pin 3 - Left   (1B)
+Pin 4 - Line 3 (1Y)
+Pin 5 - Ground (2A)    again, possibly future expansion
+Pin 6 - Right (2B)
+Pin 7 - Line 4 (2Y)
+Pin 8 - Ground  (GND)
+Pin 9 - Line 6 (3Y)
+Pin 10 - Button B  (3B)
+Pin 11 - Button A  (3A)
+Pin 12 - Line 9  (4Y)
+Pin 13 - Button C  (4B)
+Pin 14 - Start  (4A)
+Pin 15 - Ground  (G)   This must be connected to ground
+Pin 16 - +5V  (Vcc)   Power source for the chip 
+ 
+Anyway thats all the info needed to build your own joystick.
+ 
+Now as an added bonus, additional indormation!
+ 
+A simple source for a joystick cable is the Radio Shack joystick extension 
+cable. It is around $5 and is 10 ft. long.  Just snip off the connector that
+won't plug into the Genesis, strip the wires back, and use the color pinout 
+list I gave above.
+ 
+I went to my local arcade game repair company today and purchased the supplies
+I needed.  They were much cheaper than I expected.  Things you would need to
+buy from them would be:
+ 
+	an 8-way joystick     this ran me $15
+        3 buttons             $2.50 apeice
+ 
+I only bought three buttons because I am going to use a Radio Shack push button
+switch for my sart button.  You can purchase 4 arcade game buttons if you wish.
+ 
+ 
+Interesting ideas for extras on the joystick:
+ 
+1.  Autofire can be acheived with a simple 555 timer circuit.  
+    For anyone wanting a challenge it should be possible to build a
+    digital autofire using a divide-by-n counter with the select signal
+    as clock input.
+ 
+2.  Slow down mode is just autofire for the start button.
+ 
+ 
+For anyone looking for an easy way out, buy a cheap joystick or pad with the
+features you want, tear into the pad and steal the circuit board and the cable.
+The complicated part will be attaching wires between the new joystick and     
+buttons and the correct spot on the circuit board.  This method may even be
+cheaper than buying electronics parts and building from scratch depending on
+how expensive the control pad that you buy is.
+ 
+Anyway, that should be enough to at least get you guys started.  Let the net
+know how these homebuilt joysticks are performing.  I hope to have mine working
+within a couple weeks.
+ 
+Neal Howland
+nhowland@matt.ksu.ksu.edu

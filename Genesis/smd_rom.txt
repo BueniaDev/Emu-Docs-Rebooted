@@ -1,0 +1,83 @@
+==============================================================================
+                        SMD ROM FORMAT DOCUMENTATION 
+                     Written by Bart Trzynadlowski 1999
+==============================================================================
+
+This document describes the SMD Genesis ROM format. I wrote it because I found
+that XnaK's documentation is wrong. This text is best viewed in MS-DOS Editor
+or any other decent ASCII text viewer.
+        Much thanks goes to Kuwanger (http://members.tripod.com/~Kuwanger) for
+figuring out that the documentation I was using regarding SMD was incorrect.
+Felipe XnaK (http://www.classicgaming.com/launchtool) wrote the original text
+I used on the many Genesis ROM formats.
+
+0. SUPER MAGICDRIVE INTERLEAVED ROM FORMAT
+The SMD format is a Genesis ROM format which must be decoded to be manipulated
+as normal Genesis cartridge data. SMD files consist of a series of 16KB blocks
+of data with their odd bytes at the beginning, and even bytes at the end. They
+also have a header which is 512 bytes long.
+
+        Important SMD Header Bytes:
+
+        Offset 00h:     Number of 16KB blocks. This number may be incorrect in
+                        some files, it is recommended you calculate it
+                        manually: num_blocks = (sizeof(file) - 512) / 16384
+        Offset 02h:     Indicates wether ROM is a part of a series of a split
+                        ROM (1, or possibly just non-zero,) or wether it is
+                        a standalone ROM or the last ROM in a split series (0)
+        Offset 08h:     AAh
+        Offset 09h:     BBh
+
+        * Note: Some documentation claims that byte 1 is always 3 and all
+          other bytes besides those mentioned as important are 0. This is not
+          always the case. The header information in this document should be
+          considered fairly accurate.
+
+Each 16KB block has the data from each odd address at the beginning, and the
+data for each even address at the end.
+
+        Decoding a 16KB SMD Block:
+
+        1. If the byte offset in the block is less than 8192, copy the byte
+           from the SMD block to the first unused odd offset in the decode
+           buffer.
+        2. Otherwise, put it in the first unused even offset in the decode
+           buffer.
+
+        Below is example C source code for an SMD-to-BIN converter:
+
+        /* convert smd to bin */
+        for (i = 0; i < header[0]; i++)
+        {
+                e = 0;
+                o = 1;
+                fread(smd_block, 1, 16384, in_fp);
+                for (j = 0; j < 16384; j++)
+                {
+                        if (j < 8192)
+                        {
+                                bin_block[o] = smd_block[j];
+                                o += 2;
+                        }
+                        else
+                        {
+                                bin_block[e] = smd_block[j];
+                                e += 2;
+                        }
+                }
+                fwrite(bin_block, 1, 16384, out_fp);
+        }    
+
+        In the code snippet, e represents the first unused even offset (which
+        will always start at 0) in the 16KB bin_block array. Thus o represents
+        the first unused odd offset (which will always start at 1) in the 16KB
+        bin_block array. The for (i) loop uses the information from the header
+        to determine how many blocks to decode. The for (j) loop actually does
+        the individual block decoding. It should be fairly self-explanatory
+        from there. The method shown is a linear way of doing it, there are
+        faster ways of doing it -- for example, you could decode two bytes in
+        one loop, an even and an odd.
+
+Creating an SMD file is the reverse of decoding one.
+
+
