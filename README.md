@@ -1,6 +1,6 @@
 # Emu-Docs-Rebooted
 
-The Emu-Docs archive was an archive of emulator documentation and test ROMs designed to assist anyone with understanding the underlying architecture of multiple consoles. Unfortuantely, it appears that the original Github repository was taken down, presumably for unknown reasons. That is why, in order to benefit the up-and-coming emudevs that need comprehensive documentation for the systems that they want to emulate, I am hosting an unofficial mirror of the Emu-Docs repository on my Github.
+The Emu-Docs archive was an archive of emulation-related documentation and test ROMs designed to assist anyone with understanding the underlying architecture of multiple consoles and/or systems. Unfortuantely, it appears that the original Github repository was taken down, presumably for unknown reasons. That is why, in order to benefit the up-and-coming emulator developers that need a one-stop source of comprehensive documentation for the systems that they want to emulate, I am hosting an unofficial mirror of the Emu-Docs repository on my Github.
 
 ### Resources to Archive
 
